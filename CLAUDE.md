@@ -61,13 +61,18 @@ fridge/
 
 ## Common Commands
 ```bash
-npm run dev          # Start dev server
+npm run dev          # Start dev server (tsx watch + Tailwind watch, CSS auto-rebuilt)
 npm run test         # Run tests
 npm run lint         # Lint
 npm run format       # Format
+npm run css:build    # Build Tailwind CSS once (production / CI only — dev handles this automatically)
 npm run db:generate  # Generate migrations
 npm run db:migrate   # Run migrations
 ```
+
+### CSS (Tailwind)
+`public/dist.css` is a generated file (gitignored). `npm run dev` rebuilds it automatically on change.
+Run `npm run css:build` only in production or CI before starting the server.
 
 ## Agent Commands
 See `.agent/commands/` for shared slash commands:
