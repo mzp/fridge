@@ -6,19 +6,20 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src",
-    "format": "biome format --write src",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "biome check src tests",
+    "format": "biome format --write src tests",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@types/node": "^25.8.0",
     "tsx": "^4.22.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
   },
   "volta": {
     "node": "26.1.0"
