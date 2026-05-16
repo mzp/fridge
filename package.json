@@ -12,7 +12,8 @@
     "format": "biome format --write src tests",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate-meal-format": "tsx scripts/migrate-meal-format.ts"
   },
   "keywords": [],
   "author": "",
