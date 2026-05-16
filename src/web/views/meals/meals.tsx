@@ -22,15 +22,25 @@ export const MealsView: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
         <tbody>
           {meals.map((m) => {
             const past = m.date < today;
+            const href = `/meals/${m.id}`;
+            const linkClass = "block py-2 hover:text-emerald-600";
             return (
               <tr key={m.id} class={`border-b border-gray-100 ${past ? "opacity-40" : ""}`}>
-                <td class="py-2 pr-4 text-gray-600">
-                  <a href={`/meals/${m.id}`} class="hover:text-emerald-600 hover:underline">
+                <td class="pr-4 text-gray-600">
+                  <a href={href} class={linkClass}>
                     {m.date}
                   </a>
                 </td>
-                <td class="py-2 pr-4">{m.main_dish}</td>
-                <td class="py-2 text-gray-500">{m.side_dish ?? ""}</td>
+                <td class="pr-4">
+                  <a href={href} class={linkClass}>
+                    {m.main_dish}
+                  </a>
+                </td>
+                <td class="text-gray-500">
+                  <a href={href} class={linkClass}>
+                    {m.side_dish ?? ""}
+                  </a>
+                </td>
               </tr>
             );
           })}

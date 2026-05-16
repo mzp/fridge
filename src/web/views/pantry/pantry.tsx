@@ -24,22 +24,36 @@ function daysLabel(days: number | null): string {
 const PantryRow: FC<{ item: PantryItem; used: boolean }> = ({ item, used }) => {
   const days =
     item.best_before_days == null ? null : daysRemaining(item.stock_date, item.best_before_days);
+  const href = `/pantry/${item.id}`;
+  const linkClass = "block py-2 hover:text-emerald-600";
   return (
     <tr key={item.id} class={rowClass(days)}>
-      <td class="py-2 pr-4">
-        <a href={`/pantry/${item.id}`} class="hover:text-emerald-600 hover:underline">
+      <td class="pr-4">
+        <a href={href} class={linkClass}>
           {item.name}
+          {used && (
+            <span class="ml-2 text-xs text-gray-400 border border-gray-200 rounded px-1">
+              in use
+            </span>
+          )}
         </a>
-        {used && (
-          <span class="ml-2 text-xs text-gray-400 border border-gray-200 rounded px-1">in use</span>
-        )}
       </td>
-      <td class="py-2 pr-4 text-gray-600">
-        {item.quantity}
-        {item.unit ?? ""}
+      <td class="pr-4 text-gray-600">
+        <a href={href} class={linkClass}>
+          {item.quantity}
+          {item.unit ?? ""}
+        </a>
       </td>
-      <td class="py-2 pr-4 text-gray-600">{item.stock_date}</td>
-      <td class="py-2 text-gray-600">{daysLabel(days)}</td>
+      <td class="pr-4 text-gray-600">
+        <a href={href} class={linkClass}>
+          {item.stock_date}
+        </a>
+      </td>
+      <td class="text-gray-600">
+        <a href={href} class={linkClass}>
+          {daysLabel(days)}
+        </a>
+      </td>
     </tr>
   );
 };
