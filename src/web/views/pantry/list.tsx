@@ -66,7 +66,7 @@ const PantryTable: FC<{ items: PantryItem[]; usedIds: Set<number> }> = ({ items,
   </table>
 );
 
-export const PantryView: FC<{
+export const PantryList: FC<{
   items: PantryItem[];
   usedIds: Set<number>;
   category: PantryCategory;

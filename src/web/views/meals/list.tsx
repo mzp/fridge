@@ -1,7 +1,7 @@
 import type { FC } from "hono/jsx";
 import type { Meal } from "@/model/meal.js";
 
-export const MealsView: FC<{ meals: Meal[]; today: string }> = ({ meals, today }) => (
+export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }) => (
   <section>
     <div class="mb-4">
       <h2 class="text-xl font-bold text-emerald-600">Meals</h2>

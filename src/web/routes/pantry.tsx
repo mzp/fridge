@@ -1,0 +1,102 @@
+import { desc, eq, inArray } from "drizzle-orm";
+import { Hono } from "hono";
+import type { Db } from "@/db/index.js";
+import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { PantryItem } from "@/model/pantry-item.js";
+import { PantryDetail } from "@/web/views/pantry/detail.js";
+import { PantryForm } from "@/web/views/pantry/form.js";
+
+export function createPantryRoutes(db: Db) {
+  const app = new Hono();
+
+  app.get("/new", (c) => c.html(<PantryForm action="/pantry" title="Add item" cancelHref="/" />));
+
+  app.post("/", async (c) => {
+    const body = await c.req.parseBody();
+    db.insert(pantry)
+      .values({
+        name: String(body["name"]),
+        quantity: Number(body["quantity"]),
+        unit: body["unit"] ? String(body["unit"]) : null,
+        stock_date: String(body["stock_date"]),
+        best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
+        category: PantryItem.normalizeCategory(body["category"]),
+        status: "in_stock",
+      })
+      .run();
+    return c.redirect("/");
+  });
+
+  app.get("/:id", (c) => {
+    const item = db
+      .select()
+      .from(pantry)
+      .where(eq(pantry.id, Number(c.req.param("id"))))
+      .get();
+    if (!item) return c.notFound();
+    const logs = db
+      .select()
+      .from(pantryLogs)
+      .where(eq(pantryLogs.pantry_id, item.id))
+      .orderBy(desc(pantryLogs.recorded_at))
+      .all();
+    const logDates = [...new Set(logs.map((l) => l.recorded_at))];
+    const mealsByDate: Record<string, { id: number; main_dish: string }> = {};
+    if (logDates.length > 0) {
+      for (const m of db
+        .select({ id: meals.id, date: meals.date, main_dish: meals.main_dish })
+        .from(meals)
+        .where(inArray(meals.date, logDates))
+        .all()) {
+        mealsByDate[m.date] = { id: m.id, main_dish: m.main_dish };
+      }
+    }
+    return c.html(
+      <PantryDetail item={new PantryItem(item)} logs={logs} mealsByDate={mealsByDate} />,
+    );
+  });
+
+  app.get("/:id/edit", (c) => {
+    const item = db
+      .select()
+      .from(pantry)
+      .where(eq(pantry.id, Number(c.req.param("id"))))
+      .get();
+    if (!item) return c.notFound();
+    return c.html(
+      <PantryForm
+        action={`/pantry/${item.id}`}
+        title={`Edit: ${item.name}`}
+        item={item}
+        cancelHref={`/pantry/${item.id}`}
+      />,
+    );
+  });
+
+  app.post("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const body = await c.req.parseBody();
+    db.update(pantry)
+      .set({
+        name: String(body["name"]),
+        quantity: Number(body["quantity"]),
+        unit: body["unit"] ? String(body["unit"]) : null,
+        stock_date: String(body["stock_date"]),
+        best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
+        category: PantryItem.normalizeCategory(body["category"]),
+      })
+      .where(eq(pantry.id, id))
+      .run();
+    return c.redirect(`/pantry/${id}`);
+  });
+
+  app.post("/:id/consume", (c) => {
+    db.update(pantry)
+      .set({ status: "consumed" })
+      .where(eq(pantry.id, Number(c.req.param("id"))))
+      .run();
+    return c.redirect("/");
+  });
+
+  return app;
+}

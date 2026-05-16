@@ -1,8 +1,13 @@
 import { createTestDb } from "@test/helpers/db.js";
+import { mountRoute } from "@test/helpers/routes.js";
 import { describe, expect, it } from "vitest";
 import type { Db } from "@/db/index.js";
 import * as schema from "@/db/schema.js";
-import { createApp } from "@/web/app.js";
+import { createPantryRoutes } from "@/web/routes/pantry.js";
+
+function createPantryApp(db = createTestDb()) {
+  return mountRoute("/pantry", createPantryRoutes(db));
+}
 
 function seedItem(db: Db) {
   return db
@@ -14,7 +19,7 @@ function seedItem(db: Db) {
 
 describe("GET /pantry/new", () => {
   it("shows the new item form", async () => {
-    const res = await createApp(createTestDb()).request("/pantry/new");
+    const res = await createPantryApp().request("/pantry/new");
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("Add item");
@@ -25,7 +30,7 @@ describe("GET /pantry/new", () => {
 describe("POST /pantry", () => {
   it("creates a new item and redirects to /", async () => {
     const db = createTestDb();
-    const res = await createApp(db).request("/pantry", {
+    const res = await createPantryApp(db).request("/pantry", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "name=%E7%89%9B%E4%B9%B3&quantity=2&unit=%E6%9C%AC&stock_date=2026-05-15&best_before_days=7",
@@ -43,7 +48,7 @@ describe("GET /pantry/:id", () => {
   it("shows the detail page", async () => {
     const db = createTestDb();
     const item = seedItem(db);
-    const res = await createApp(db).request(`/pantry/${item.id}`);
+    const res = await createPantryApp(db).request(`/pantry/${item.id}`);
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("卵");
@@ -52,14 +57,14 @@ describe("GET /pantry/:id", () => {
   });
 
   it("returns 404 for unknown id", async () => {
-    const res = await createApp(createTestDb()).request("/pantry/999");
+    const res = await createPantryApp().request("/pantry/999");
     expect(res.status).toBe(404);
   });
 
   it("shows 'No usage logged yet.' when no logs exist", async () => {
     const db = createTestDb();
     const item = seedItem(db);
-    const res = await createApp(db).request(`/pantry/${item.id}`);
+    const res = await createPantryApp(db).request(`/pantry/${item.id}`);
     const html = await res.text();
     expect(html).toContain("No usage logged yet.");
   });
@@ -71,7 +76,7 @@ describe("GET /pantry/:id", () => {
       .values({ pantry_id: item.id, delta: -2, recorded_at: "2026-05-15", note: "塩焼き" })
       .run();
 
-    const res = await createApp(db).request(`/pantry/${item.id}`);
+    const res = await createPantryApp(db).request(`/pantry/${item.id}`);
     const html = await res.text();
     expect(html).toContain("塩焼き");
     expect(html).toContain("2026-05-15");
@@ -82,7 +87,7 @@ describe("GET /pantry/:id/edit", () => {
   it("shows the edit form prefilled with existing values", async () => {
     const db = createTestDb();
     const item = seedItem(db);
-    const res = await createApp(db).request(`/pantry/${item.id}/edit`);
+    const res = await createPantryApp(db).request(`/pantry/${item.id}/edit`);
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("卵");
@@ -94,7 +99,7 @@ describe("POST /pantry/:id", () => {
   it("updates the item and redirects to detail page", async () => {
     const db = createTestDb();
     const item = seedItem(db);
-    const res = await createApp(db).request(`/pantry/${item.id}`, {
+    const res = await createPantryApp(db).request(`/pantry/${item.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `name=%E5%8D%B5&quantity=10&unit=%E5%80%8B&stock_date=2026-05-15&best_before_days=`,
@@ -111,7 +116,9 @@ describe("POST /pantry/:id/consume", () => {
   it("marks the item as consumed and redirects to /", async () => {
     const db = createTestDb();
     const item = seedItem(db);
-    const res = await createApp(db).request(`/pantry/${item.id}/consume`, { method: "POST" });
+    const res = await createPantryApp(db).request(`/pantry/${item.id}/consume`, {
+      method: "POST",
+    });
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe("/");
 

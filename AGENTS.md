@@ -25,7 +25,8 @@ Fridge is a meal planning system with an MCP server and an SSR web UI.
 src/
   web/              Hono server process
     index.tsx       Web server entrypoint
-    app.tsx         Route definitions
+    app.tsx         App assembly and route mounting
+    routes/         Route modules grouped by feature
     views/          SSR views
   mcp/              MCP server process over stdio
     index.ts        MCP server entrypoint
