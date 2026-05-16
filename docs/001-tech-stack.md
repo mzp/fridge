@@ -47,6 +47,9 @@ CSS-in-JS libraries are optimized for React SPA component trees and add unnecess
 ### MCP: @modelcontextprotocol/sdk (official)
 The official SDK is the only reasonable choice. It provides InMemoryTransport for E2E testing without stdio, which is critical for keeping tests fast and hermetic.
 
+**Transport: stdio**
+Claude Desktop launches the MCP server as a child process and communicates over stdin/stdout. HTTP-based transports (Streamable HTTP) are available for remote/hosted scenarios, but Claude Desktop requires stdio for local integrations. `npm run mcp` starts the server; Claude Desktop is configured with `command: npm, args: ["--prefix", "<path>", "run", "--silent", "mcp"]`. The `--silent` flag is required to suppress npm's script banner, which would otherwise be written to stdout and break JSON parsing.
+
 ### Database ORM: Drizzle
 **Chosen over**: Prisma, Kysely, raw SQL
 

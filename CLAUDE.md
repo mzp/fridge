@@ -20,20 +20,17 @@ A meal planning system with MCP server + SSR web UI.
 ```
 fridge/
 ├── src/
-│   ├── index.ts          # Hono server entrypoint
-│   ├── mcp/
+│   ├── web/              # Hono server process
+│   │   ├── index.tsx     # Hono server entrypoint
+│   │   └── views/
+│   │       ├── layout.tsx    # Shared layout
+│   │       ├── meals.tsx     # Meal calendar view
+│   │       └── shopping.tsx  # Shopping list view
+│   ├── mcp/              # MCP server process (stdio)
 │   │   ├── index.ts      # MCP server entrypoint
 │   │   ├── meals.ts      # Meal tools
 │   │   ├── pantry.ts     # Pantry tools
 │   │   └── shopping.ts   # Shopping list tools
-│   ├── routes/
-│   │   ├── meals.ts
-│   │   ├── pantry.ts
-│   │   └── shopping.ts
-│   ├── views/
-│   │   ├── layout.tsx    # Shared layout
-│   │   ├── meals.tsx     # Meal calendar view
-│   │   └── shopping.tsx  # Shopping list view
 │   └── db/
 │       ├── schema.ts     # Drizzle schema
 │       └── index.ts      # DB connection
@@ -74,9 +71,22 @@ npm run db:migrate   # Run migrations
 `public/dist.css` is a generated file (gitignored). `npm run dev` rebuilds it automatically on change.
 Run `npm run css:build` only in production or CI before starting the server.
 
+## MCP (Claude Desktop)
+MCP runs over stdio transport. Claude Desktop config:
+```json
+{
+  "mcpServers": {
+    "fridge": {
+      "command": "npm",
+      "args": ["--prefix", "/Users/mzp/ghq/github.com/mzp/fridge", "run", "--silent", "mcp"]
+    }
+  }
+}
+```
+
 ## Agent Commands
 See `.agent/commands/` for shared slash commands:
-- `/check` — lint + format + test
+- `/precheck` — lint + format + test
 
 ## Detailed Docs
 See `docs/` for architecture decisions and tech stack rationale.

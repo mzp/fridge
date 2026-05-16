@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.tsx & npx @tailwindcss/cli -i public/style.css -o public/dist.css --watch",
+    "dev": "tsx watch src/web/index.tsx & npx @tailwindcss/cli -i public/style.css -o public/dist.css --watch",
+    "mcp": "tsx src/mcp/index.ts",
     "css:build": "npx @tailwindcss/cli -i public/style.css -o public/dist.css",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src tests",
@@ -26,7 +27,9 @@
     "node": "26.1.0"
   },
   "dependencies": {
+    "@hono/mcp": "^0.2.5",
     "@hono/node-server": "^2.0.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/cli": "^4.3.0",
     "hono": "^4.12.18",
     "tailwindcss": "^4.3.0"
