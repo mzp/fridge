@@ -60,14 +60,17 @@ SQLite files are stored in `db/` and gitignored (`db/*.db`).
 Migration SQL files are in `db/migrations/` and should be committed.
 
 ## Common Commands
+
+All `npm` commands must be run via `volta run` to ensure the correct Node.js version (defined in `package.json` volta config) is used.
+
 ```bash
-npm run dev          # Start dev server (tsx watch + Tailwind watch, CSS auto-rebuilt)
-npm run test         # Run tests
-npm run lint         # Lint
-npm run format       # Format
-npm run css:build    # Build Tailwind CSS once (production / CI only — dev handles this automatically)
-npm run db:generate  # Generate migrations
-npm run db:migrate   # Run migrations
+volta run npm run dev          # Start dev server (tsx watch + Tailwind watch, CSS auto-rebuilt)
+volta run npm run test         # Run tests
+volta run npm run lint         # Lint
+volta run npm run format       # Format
+volta run npm run css:build    # Build Tailwind CSS once (production / CI only — dev handles this automatically)
+volta run npm run db:generate  # Generate migrations
+volta run npm run db:migrate   # Run migrations
 ```
 
 ### CSS (Tailwind)
