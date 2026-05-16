@@ -38,8 +38,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
       const prepared = items.filter((i) => i.category === "prepared");
       const ingredients = items.filter((i) => i.category !== "prepared");
       const sections: string[] = [];
-      if (prepared.length > 0)
-        sections.push(`[prepared]\n${prepared.map(formatItem).join("\n")}`);
+      if (prepared.length > 0) sections.push(`[prepared]\n${prepared.map(formatItem).join("\n")}`);
       if (ingredients.length > 0)
         sections.push(`[ingredient]\n${ingredients.map(formatItem).join("\n")}`);
       return { content: [{ type: "text", text: sections.join("\n\n") }] };
@@ -53,7 +52,12 @@ export function registerPantryTools(server: McpServer, db: Db) {
       name: z.string().describe("Item name"),
       quantity: z.number().int().describe("Quantity"),
       unit: z.string().describe("Unit (e.g. 個, ml, g)").optional(),
-      stock_date: z.string().date().describe("Stock date (YYYY-MM-DD): purchase date for ingredients, preparation date for prepared dishes"),
+      stock_date: z
+        .string()
+        .date()
+        .describe(
+          "Stock date (YYYY-MM-DD): purchase date for ingredients, preparation date for prepared dishes",
+        ),
       best_before_days: z.number().int().describe("Days until expiry").optional(),
       category: z
         .enum(["ingredient", "prepared"])
@@ -107,7 +111,10 @@ export function registerPantryTools(server: McpServer, db: Db) {
         .optional(),
       use_all: z.boolean().describe("Set to true to use all remaining stock.").optional(),
       date: z.string().date().describe("Date of use (YYYY-MM-DD, defaults to today)").optional(),
-      note: z.string().describe("Optional note, e.g. fractional amount used (\"1/4 of one\").").optional(),
+      note: z
+        .string()
+        .describe('Optional note, e.g. fractional amount used ("1/4 of one").')
+        .optional(),
     },
     ({ id, quantity_used, use_all, date, note }) => {
       const today = new Date().toISOString().slice(0, 10);

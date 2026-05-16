@@ -8,9 +8,9 @@ import { MealDetail } from "@/web/views/meals/meal-detail.js";
 import { MealForm } from "@/web/views/meals/meal-form.js";
 import { MealsView } from "@/web/views/meals/meals.js";
 import { MealsCalendar } from "@/web/views/meals/meals-calendar.js";
+import { PantryView } from "@/web/views/pantry/pantry.js";
 import { PantryDetail } from "@/web/views/pantry/pantry-detail.js";
 import { PantryForm } from "@/web/views/pantry/pantry-form.js";
-import { PantryView } from "@/web/views/pantry/pantry.js";
 
 function lastDayOfMonth(year: number, month: number): string {
   return new Date(year, month, 0).toISOString().slice(0, 10);
@@ -43,7 +43,11 @@ export function createApp(db: Db) {
         return expiryA - expiryB;
       });
     const usedIds = new Set(
-      db.select({ pantry_id: pantryLogs.pantry_id }).from(pantryLogs).all().map((r) => r.pantry_id),
+      db
+        .select({ pantry_id: pantryLogs.pantry_id })
+        .from(pantryLogs)
+        .all()
+        .map((r) => r.pantry_id),
     );
     return c.html(
       <Layout>

@@ -31,7 +31,7 @@ export const MealsView: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
                 </td>
                 <td class="py-2 pr-4">{m.main_dish}</td>
                 <td class="py-2 text-gray-500">{m.side_dish ?? ""}</td>
-                </tr>
+              </tr>
             );
           })}
         </tbody>

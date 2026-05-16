@@ -52,7 +52,10 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
                 : String(Math.abs(entry.delta));
               return (
                 <li key={i} class="flex gap-2 text-gray-700">
-                  <a href={`/pantry/${entry.id}`} class="font-medium hover:text-emerald-600 hover:underline">
+                  <a
+                    href={`/pantry/${entry.id}`}
+                    class="font-medium hover:text-emerald-600 hover:underline"
+                  >
                     {entry.name}
                   </a>
                   <span class="text-gray-400">{qty}</span>
