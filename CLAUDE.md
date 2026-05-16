@@ -52,9 +52,12 @@ fridge/
 ## Environment
 | File | DB | Usage |
 |------|----|-------|
-| `.env` | SQLite (`mealplanner.db`) | Local dev |
+| `.env` | SQLite (`db/fridge.db`) | Local dev |
 | `.env.test` | SQLite (`:memory:`) | Testing |
 | `.env.production` | PostgreSQL | Production |
+
+SQLite files are stored in `db/` and gitignored (`db/*.db`).
+Migration SQL files are in `db/migrations/` and should be committed.
 
 ## Common Commands
 ```bash

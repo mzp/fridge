@@ -20,7 +20,8 @@
       "recommended": true,
       "complexity": {
         "recommended": true,
-        "noExcessiveCognitiveComplexity": "warn"
+        "noExcessiveCognitiveComplexity": "warn",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "recommended": true,

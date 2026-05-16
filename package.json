@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +20,9 @@
   "type": "module",
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.8.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.22.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
@@ -31,6 +35,8 @@
     "@hono/node-server": "^2.0.2",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/cli": "^4.3.0",
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.18",
     "tailwindcss": "^4.3.0"
   }
