@@ -1,34 +1,11 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { createTestDb } from "@test/helpers/db.js";
+import { createTestClient } from "@test/helpers/mcp.js";
 import { describe, expect, it } from "vitest";
-import type { Db } from "@/db/index.js";
-import * as schema from "@/db/schema.js";
 import { registerPantryTools } from "@/mcp/pantry.js";
-
-function createTestDb(): Db {
-  const sqlite = new Database(":memory:");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, { migrationsFolder: "db/migrations" });
-  return db;
-}
-
-async function createTestClient(db: Db) {
-  const server = new McpServer({ name: "fridge-test", version: "0.0.0" });
-  registerPantryTools(server, db);
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  await server.connect(serverTransport);
-  const client = new Client({ name: "test-client", version: "0.0.0" });
-  await client.connect(clientTransport);
-  return client;
-}
 
 describe("set_pantry_item", () => {
   it("adds a new item and reads it back via get_pantry", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     const added = await client.callTool({
       name: "set_pantry_item",
@@ -45,7 +22,7 @@ describe("set_pantry_item", () => {
   });
 
   it("updates an existing item (same name, same stock_date)", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     await client.callTool({
       name: "set_pantry_item",
@@ -61,7 +38,7 @@ describe("set_pantry_item", () => {
   });
 
   it("treats same name with different stock_date as separate batches", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     await client.callTool({
       name: "set_pantry_item",
@@ -81,7 +58,7 @@ describe("set_pantry_item", () => {
 
 describe("use_pantry_item", () => {
   it("decrements quantity and logs usage", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     await client.callTool({
       name: "set_pantry_item",
@@ -100,7 +77,7 @@ describe("use_pantry_item", () => {
   });
 
   it("marks item as consumed when all quantity is used", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     await client.callTool({
       name: "set_pantry_item",
@@ -119,7 +96,7 @@ describe("use_pantry_item", () => {
   });
 
   it("uses all remaining stock when use_all is true", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     await client.callTool({
       name: "set_pantry_item",
@@ -138,7 +115,7 @@ describe("use_pantry_item", () => {
   });
 
   it("returns not found for unknown ID", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerPantryTools);
 
     const result = await client.callTool({
       name: "use_pantry_item",

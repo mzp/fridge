@@ -1,17 +1,7 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { createTestDb } from "@test/helpers/db.js";
 import { describe, expect, it } from "vitest";
-import type { Db } from "@/db/index.js";
 import * as schema from "@/db/schema.js";
 import { createApp } from "@/web/app.js";
-
-function createTestDb(): Db {
-  const sqlite = new Database(":memory:");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, { migrationsFolder: "db/migrations" });
-  return db;
-}
 
 describe("GET /meals", () => {
   it("shows current month name", async () => {

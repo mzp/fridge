@@ -14,7 +14,7 @@ Fridge is a meal planning system with an MCP server and an SSR web UI.
 - Web server: Hono, using SSR and REST routes.
 - MCP: `@modelcontextprotocol/sdk`.
 - DB ORM: Drizzle.
-- DB: SQLite for local/test, PostgreSQL for production.
+- DB: SQLite via `better-sqlite3`.
 - CSS: Tailwind.
 - Testing: Vitest.
 - Lint/format: Biome.
@@ -46,7 +46,7 @@ db/migrations/      Drizzle migrations, committed to git
 
 - `.env`: local development, SQLite database under `db/`.
 - `.env.test`: tests, SQLite in memory.
-- `.env.production`: production, PostgreSQL.
+- Production currently uses the same `DATABASE_PATH`-based SQLite configuration.
 
 SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
 

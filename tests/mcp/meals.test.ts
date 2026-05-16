@@ -1,37 +1,11 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { createTestDb } from "@test/helpers/db.js";
+import { createTestClient } from "@test/helpers/mcp.js";
 import { describe, expect, it } from "vitest";
-import type { Db } from "@/db/index.js";
-import * as schema from "@/db/schema.js";
 import { registerMealTools } from "@/mcp/meals.js";
-
-function createTestDb(): Db {
-  const sqlite = new Database(":memory:");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, { migrationsFolder: "db/migrations" });
-  return db;
-}
-
-async function createTestClient(db: Db) {
-  const server = new McpServer({ name: "fridge-test", version: "0.0.0" });
-  registerMealTools(server, db);
-
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  await server.connect(serverTransport);
-
-  const client = new Client({ name: "test-client", version: "0.0.0" });
-  await client.connect(clientTransport);
-
-  return client;
-}
 
 describe("get_meals", () => {
   it("returns meals set via set_meal within the date range", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerMealTools);
 
     await client.callTool({
       name: "set_meal",
@@ -60,7 +34,7 @@ describe("get_meals", () => {
   });
 
   it("returns no meals message when range has no meals", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerMealTools);
 
     await client.callTool({
       name: "set_meal",
@@ -81,7 +55,7 @@ describe("get_meals", () => {
   });
 
   it("reflects overwrites made via set_meal", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerMealTools);
 
     const added = await client.callTool({
       name: "set_meal",
@@ -108,7 +82,7 @@ describe("get_meals", () => {
 
 describe("delete_meal", () => {
   it("deletes a meal and removes it from get_meals", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerMealTools);
 
     await client.callTool({
       name: "set_meal",
@@ -132,7 +106,7 @@ describe("delete_meal", () => {
   });
 
   it("returns not found for unknown date", async () => {
-    const client = await createTestClient(createTestDb());
+    const client = await createTestClient(createTestDb(), registerMealTools);
 
     const result = await client.callTool({
       name: "delete_meal",
