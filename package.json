@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/web/index.tsx & npx @tailwindcss/cli -i public/style.css -o public/dist.css --watch",
+    "dev": "npm run css:build && npm run db:migrate && tsx src/web/index.tsx",
     "mcp": "tsx src/mcp/index.ts",
     "css:build": "npx @tailwindcss/cli -i public/style.css -o public/dist.css",
     "typecheck": "tsc --noEmit",

@@ -64,7 +64,7 @@ Migration SQL files are in `db/migrations/` and should be committed.
 All `npm` commands must be run via `volta run` to ensure the correct Node.js version (defined in `package.json` volta config) is used.
 
 ```bash
-volta run npm run dev          # Start dev server (tsx watch + Tailwind watch, CSS auto-rebuilt)
+volta run npm run dev          # Build CSS, run migrations, then start dev server
 volta run npm run test         # Run tests
 volta run npm run lint         # Lint
 volta run npm run format       # Format
@@ -74,8 +74,7 @@ volta run npm run db:migrate   # Run migrations
 ```
 
 ### CSS (Tailwind)
-`public/dist.css` is a generated file (gitignored). `npm run dev` rebuilds it automatically on change.
-Run `npm run css:build` only in production or CI before starting the server.
+`public/dist.css` is a generated file (gitignored). Run `npm run css:build` before starting the server.
 
 ## MCP (Claude Desktop)
 MCP runs over stdio transport. Claude Desktop config:
