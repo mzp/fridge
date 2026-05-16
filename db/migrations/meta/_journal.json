@@ -15,6 +15,13 @@
       "when": 1778902573670,
       "tag": "0001_grey_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1778904930985,
+      "tag": "0002_workable_pyro",
+      "breakpoints": true
     }
   ]
 }

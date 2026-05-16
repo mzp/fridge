@@ -1,4 +1,4 @@
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const meals = sqliteTable("meals", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -6,3 +6,17 @@ export const meals = sqliteTable("meals", {
   main_dish: text().notNull(),
   side_dish: text(),
 });
+
+export const pantry = sqliteTable(
+  "pantry",
+  {
+    id: int().primaryKey({ autoIncrement: true }),
+    name: text().notNull(),
+    quantity: int().notNull(),
+    unit: text(),
+    purchased_at: text().notNull(),
+    best_before_days: int(),
+    status: text().notNull().default("in_stock"),
+  },
+  (t) => [uniqueIndex("pantry_name_idx").on(t.name)],
+);
