@@ -1,0 +1,98 @@
+# Fridge
+
+## Overview
+
+Fridge is a meal planning system with an MCP server and an SSR web UI.
+
+- Chat agent: plan meals, generate shopping lists, and save recipes through MCP.
+- Web UI: view the meal calendar, inspect recipes, and manage the shopping list.
+
+## Tech Stack
+
+- Runtime: Node.js, managed via Volta.
+- Package manager: npm.
+- Web server: Hono, using SSR and REST routes.
+- MCP: `@modelcontextprotocol/sdk`.
+- DB ORM: Drizzle.
+- DB: SQLite for local/test, PostgreSQL for production.
+- CSS: Tailwind.
+- Testing: Vitest.
+- Lint/format: Biome.
+
+## Repository Layout
+
+```text
+src/
+  web/              Hono server process
+    index.tsx       Web server entrypoint
+    app.tsx         Route definitions
+    views/          SSR views
+  mcp/              MCP server process over stdio
+    index.ts        MCP server entrypoint
+    meals.ts        Meal tools
+    pantry.ts       Pantry tools
+  db/
+    schema.ts       Drizzle schema
+    index.ts        DB connection
+tests/
+  mcp/              MCP tests
+  routes/           Web route tests
+public/             Static assets
+docs/               Architecture docs and ADRs
+db/migrations/      Drizzle migrations, committed to git
+```
+
+## Environment
+
+- `.env`: local development, SQLite database under `db/`.
+- `.env.test`: tests, SQLite in memory.
+- `.env.production`: production, PostgreSQL.
+
+SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
+
+## Commands
+
+Run all npm commands through `volta run` so the Node.js version from `package.json` is used.
+
+```bash
+volta run npm run dev          # Build CSS, run migrations, then start the dev server
+volta run npm run test         # Run tests
+volta run npm run typecheck    # Type check
+volta run npm run lint         # Lint
+volta run npm run format       # Format
+volta run npm run css:build    # Build Tailwind CSS once
+volta run npm run db:generate  # Generate migrations
+volta run npm run db:migrate   # Run migrations
+```
+
+`public/dist.css` is generated and gitignored. Build it before starting the server; `npm run dev` already handles this.
+
+## Agent Workflows
+
+Codex should treat these as reusable named workflows when the user asks for them.
+
+- `precheck`: follow `.agents/workflows/precheck.md`.
+- `self-review`: follow `.agents/workflows/self-review.md`. With no argument, scan files changed in the last commit. With `all`, scan all files under `src/` and `tests/`.
+
+The shared workflow bodies live under `.agents/workflows/`. Tool-specific entrypoints under `.claude/commands/` and `.codex/prompts/` should only point to those shared files.
+
+## MCP Configuration
+
+MCP runs over stdio transport. Claude Desktop can use:
+
+```json
+{
+  "mcpServers": {
+    "fridge": {
+      "command": "/bin/sh",
+      "args": ["-c", "cd /Users/mzp/ghq/github.com/mzp/fridge && exec /Users/mzp/.volta/bin/volta run npm run --silent mcp"]
+    }
+  }
+}
+```
+
+## Development Notes
+
+- Prefer inferred Drizzle types from `src/db/schema.ts`, such as `typeof meals.$inferSelect` and `typeof pantry.$inferInsert`, instead of manually duplicating table-shaped types.
+- Keep generated artifacts out of commits unless they are migrations or intentionally tracked assets.
+- Keep `CLAUDE.md`, `AGENTS.md`, and `.agents/workflows/` consistent when project structure or scripts change.
