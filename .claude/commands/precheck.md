@@ -4,4 +4,4 @@ Fix formatting and verify the codebase is ready for review: auto-format, lint, t
 volta run npm run format && volta run npm run lint && volta run npm run typecheck && volta run npm test
 ```
 
-After all steps pass, run `git status --short` and check if there are any uncommitted changes (including untracked files). If there are, list them and warn that they are not committed. If all steps pass and there are no uncommitted files, confirm everything is clean.
+After all steps pass, run `git status --short` and check if there are any uncommitted changes (including untracked files). If there are, list them and suggest `git commit --amend` if the changes are minor fixes (formatting, import order, etc.) that belong in the last commit. If all steps pass and there are no uncommitted files, confirm everything is clean.
