@@ -1,5 +1,7 @@
 # Fridge
 
+For the human-facing quick start (commands, log tailing) see [`README.md`](./README.md). This file covers the conventions agents need.
+
 ## Overview
 
 Fridge is a meal planning system with an MCP server and an SSR web UI.
@@ -108,9 +110,4 @@ Pino-based structured logs are written under `logs/` (gitignored).
 - `logs/mcp.jsonl` — every MCP tool invocation (tool name, params, output summary, duration; stack trace on error). MCP runs over stdio, so logs go to file only.
 - `logs/{web,mcp}-test.jsonl` — logs from the test run. `tests/helpers/setup-logs.ts` wipes `logs/*-test.jsonl` at the start of every `npm run test` so each run is fresh.
 
-Check logs (`-S` keeps each entry on one line, matching the in-process dev output):
-```bash
-tail -f logs/web.jsonl | npx pino-pretty -S
-tail -f logs/mcp.jsonl | npx pino-pretty -S
-cat logs/mcp-test.jsonl | npx pino-pretty -S  # inspect what the last test run logged
-```
+Human-facing instructions for tailing logs with `pino-pretty` live in [`README.md`](./README.md).
