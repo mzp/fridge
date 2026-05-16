@@ -51,7 +51,13 @@ describe("GET /", () => {
   it("shows pantry items on the top page", async () => {
     const db = createTestDb();
     db.insert(schema.pantry)
-      .values({ name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15", status: "in_stock" })
+      .values({
+        name: "卵",
+        quantity: 6,
+        unit: "個",
+        purchased_at: "2026-05-15",
+        status: "in_stock",
+      })
       .run();
 
     const res = await createApp(db).request("/");

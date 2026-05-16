@@ -1,15 +1,8 @@
 import type { FC } from "hono/jsx";
+import type { pantry } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 
-type PantryItem = {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string | null;
-  purchased_at: string;
-  best_before_days: number | null;
-  status: string;
-};
+type PantryItem = typeof pantry.$inferSelect;
 
 function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   const purchased = new Date(purchasedAt).getTime();
@@ -19,7 +12,7 @@ function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
 
 export const PantryDetail: FC<{ item: PantryItem }> = ({ item }) => {
   const days =
-    item.best_before_days != null ? daysRemaining(item.purchased_at, item.best_before_days) : null;
+    item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
 
   return (
     <Layout>
@@ -42,14 +35,20 @@ export const PantryDetail: FC<{ item: PantryItem }> = ({ item }) => {
           </div>
           <div class="flex gap-4">
             <dt class="w-32 text-gray-500">Best before</dt>
-            <dd>
-              {item.best_before_days != null ? `${item.best_before_days} days` : "—"}
-            </dd>
+            <dd>{item.best_before_days == null ? "—" : `${item.best_before_days} days`}</dd>
           </div>
           {days != null && (
             <div class="flex gap-4">
               <dt class="w-32 text-gray-500">Expires in</dt>
-              <dd class={days <= 0 ? "text-red-600 font-medium" : days <= 3 ? "text-yellow-600 font-medium" : ""}>
+              <dd
+                class={
+                  days <= 0
+                    ? "text-red-600 font-medium"
+                    : days <= 3
+                      ? "text-yellow-600 font-medium"
+                      : ""
+                }
+              >
                 {days <= 0 ? "Expired" : `${days} days`}
               </dd>
             </div>

@@ -34,7 +34,9 @@ describe("set_pantry_item", () => {
       name: "set_pantry_item",
       arguments: { name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15" },
     });
-    expect(added.content).toEqual([{ type: "text", text: "Added: 卵 x6個 (purchased: 2026-05-15)" }]);
+    expect(added.content).toEqual([
+      { type: "text", text: "Added: 卵 x6個 (purchased: 2026-05-15)" },
+    ]);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
     expect(list.content).toEqual([{ type: "text", text: "卵 x6個 (purchased: 2026-05-15)" }]);
@@ -51,7 +53,9 @@ describe("set_pantry_item", () => {
       name: "set_pantry_item",
       arguments: { name: "牛乳", quantity: 2, purchased_at: "2026-05-15" },
     });
-    expect(updated.content).toEqual([{ type: "text", text: "Updated: 牛乳 x2 (purchased: 2026-05-15)" }]);
+    expect(updated.content).toEqual([
+      { type: "text", text: "Updated: 牛乳 x2 (purchased: 2026-05-15)" },
+    ]);
   });
 });
 
@@ -72,7 +76,10 @@ describe("consume_pantry_item", () => {
   it("returns not found for unknown item", async () => {
     const client = await createTestClient(createTestDb());
 
-    const result = await client.callTool({ name: "consume_pantry_item", arguments: { name: "存在しない食材" } });
+    const result = await client.callTool({
+      name: "consume_pantry_item",
+      arguments: { name: "存在しない食材" },
+    });
     expect(result.content).toEqual([{ type: "text", text: 'Item "存在しない食材" not found.' }]);
   });
 });

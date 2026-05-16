@@ -1,14 +1,7 @@
 import type { FC } from "hono/jsx";
+import type { pantry } from "@/db/schema.js";
 
-type PantryItem = {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string | null;
-  purchased_at: string;
-  best_before_days: number | null;
-  status: string;
-};
+type PantryItem = typeof pantry.$inferSelect;
 
 function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   const purchased = new Date(purchasedAt).getTime();
@@ -16,11 +9,46 @@ function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   return Math.ceil((purchased + bestBeforeDays * 86400000 - today) / 86400000);
 }
 
+function rowClass(days: number | null): string {
+  if (days != null && days <= 0) return "border-b border-gray-100 bg-red-50";
+  if (days != null && days <= 3) return "border-b border-gray-100 bg-yellow-50";
+  return "border-b border-gray-100";
+}
+
+function daysLabel(days: number | null): string {
+  if (days == null) return "";
+  if (days <= 0) return "Expired";
+  return `${days}d`;
+}
+
+const PantryRow: FC<{ item: PantryItem }> = ({ item }) => {
+  const days =
+    item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
+  return (
+    <tr key={item.id} class={rowClass(days)}>
+      <td class="py-2 pr-4">
+        <a href={`/pantry/${item.id}`} class="hover:text-emerald-600 hover:underline">
+          {item.name}
+        </a>
+      </td>
+      <td class="py-2 pr-4 text-gray-600">
+        {item.quantity}
+        {item.unit ?? ""}
+      </td>
+      <td class="py-2 pr-4 text-gray-600">{item.purchased_at}</td>
+      <td class="py-2 text-gray-600">{daysLabel(days)}</td>
+    </tr>
+  );
+};
+
 export const PantryView: FC<{ items: PantryItem[] }> = ({ items }) => (
   <section>
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl font-bold text-emerald-600">Pantry</h2>
-      <a href="/pantry/new" class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700">
+      <a
+        href="/pantry/new"
+        class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
+      >
         Add item
       </a>
     </div>
@@ -37,34 +65,9 @@ export const PantryView: FC<{ items: PantryItem[] }> = ({ items }) => (
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => {
-            const days =
-              item.best_before_days != null
-                ? daysRemaining(item.purchased_at, item.best_before_days)
-                : null;
-            const rowClass =
-              days != null && days <= 0
-                ? "border-b border-gray-100 bg-red-50"
-                : days != null && days <= 3
-                  ? "border-b border-gray-100 bg-yellow-50"
-                  : "border-b border-gray-100";
-            const daysLabel = days == null ? "" : days <= 0 ? "Expired" : `${days}d`;
-            return (
-              <tr key={item.id} class={rowClass}>
-                <td class="py-2 pr-4">
-                  <a href={`/pantry/${item.id}`} class="hover:text-emerald-600 hover:underline">
-                    {item.name}
-                  </a>
-                </td>
-                <td class="py-2 pr-4 text-gray-600">
-                  {item.quantity}
-                  {item.unit ?? ""}
-                </td>
-                <td class="py-2 pr-4 text-gray-600">{item.purchased_at}</td>
-                <td class="py-2 text-gray-600">{daysLabel}</td>
-              </tr>
-            );
-          })}
+          {items.map((item) => (
+            <PantryRow key={item.id} item={item} />
+          ))}
         </tbody>
       </table>
     )}

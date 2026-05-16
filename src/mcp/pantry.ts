@@ -20,13 +20,13 @@ function formatItem(item: {
 }): string {
   const qty = item.unit ? `${item.quantity}${item.unit}` : String(item.quantity);
   let line = `${item.name} x${qty} (purchased: ${item.purchased_at}`;
-  if (item.best_before_days != null) {
+  if (item.best_before_days == null) {
+    line += ")";
+  } else {
     const days = daysRemaining(item.purchased_at, item.best_before_days);
     line += `, best before: ${item.best_before_days}d)`;
     if (days <= 0) line += " [!] expired";
     else if (days <= 3) line += " [!] expires soon";
-  } else {
-    line += ")";
   }
   return line;
 }
@@ -42,10 +42,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
         content: [
           {
             type: "text",
-            text:
-              items.length > 0
-                ? items.map(formatItem).join("\n")
-                : "No items in stock.",
+            text: items.length > 0 ? items.map(formatItem).join("\n") : "No items in stock.",
           },
         ],
       };
@@ -73,7 +70,12 @@ export function registerPantryTools(server: McpServer, db: Db) {
         status: "in_stock",
       };
       if (existing) {
-        const updated = db.update(pantry).set(values).where(eq(pantry.id, existing.id)).returning().get();
+        const updated = db
+          .update(pantry)
+          .set(values)
+          .where(eq(pantry.id, existing.id))
+          .returning()
+          .get();
         return { content: [{ type: "text", text: `Updated: ${formatItem(updated)}` }] };
       }
       const inserted = db.insert(pantry).values(values).returning().get();

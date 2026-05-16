@@ -1,28 +1,26 @@
 import type { FC } from "hono/jsx";
+import type { pantry } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 
-type PantryItem = {
-  id?: number;
-  name?: string;
-  quantity?: number;
-  unit?: string | null;
-  purchased_at?: string;
-  best_before_days?: number | null;
-};
+type PantryItem = Partial<typeof pantry.$inferSelect>;
 
-export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }> = ({
-  item,
-  action,
-  title,
-}) => (
+export const PantryForm: FC<{
+  item?: PantryItem;
+  action: string;
+  title: string;
+  cancelHref: string;
+}> = ({ item, action, title, cancelHref }) => (
   <Layout>
     <main class="max-w-lg mx-auto px-4 py-8">
       <h1 class="text-2xl font-bold text-emerald-600 mb-6">{title}</h1>
       <form method="post" action={action} class="space-y-4">
         <div>
-          <label class="block text-sm text-gray-500 mb-1">Name</label>
+          <label for="name" class="block text-sm text-gray-500 mb-1">
+            Name
+          </label>
           <input
             type="text"
+            id="name"
             name="name"
             value={item?.name ?? ""}
             required
@@ -31,9 +29,12 @@ export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }
         </div>
         <div class="flex gap-3">
           <div class="flex-1">
-            <label class="block text-sm text-gray-500 mb-1">Quantity</label>
+            <label for="quantity" class="block text-sm text-gray-500 mb-1">
+              Quantity
+            </label>
             <input
               type="number"
+              id="quantity"
               name="quantity"
               value={item?.quantity ?? ""}
               required
@@ -42,9 +43,12 @@ export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }
             />
           </div>
           <div class="flex-1">
-            <label class="block text-sm text-gray-500 mb-1">Unit</label>
+            <label for="unit" class="block text-sm text-gray-500 mb-1">
+              Unit
+            </label>
             <input
               type="text"
+              id="unit"
               name="unit"
               value={item?.unit ?? ""}
               placeholder="個, ml, g …"
@@ -53,9 +57,12 @@ export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }
           </div>
         </div>
         <div>
-          <label class="block text-sm text-gray-500 mb-1">Purchased at</label>
+          <label for="purchased_at" class="block text-sm text-gray-500 mb-1">
+            Purchased at
+          </label>
           <input
             type="date"
+            id="purchased_at"
             name="purchased_at"
             value={item?.purchased_at ?? ""}
             required
@@ -63,9 +70,12 @@ export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }
           />
         </div>
         <div>
-          <label class="block text-sm text-gray-500 mb-1">Best before (days)</label>
+          <label for="best_before_days" class="block text-sm text-gray-500 mb-1">
+            Best before (days)
+          </label>
           <input
             type="number"
+            id="best_before_days"
             name="best_before_days"
             value={item?.best_before_days ?? ""}
             min="1"
@@ -80,7 +90,7 @@ export const PantryForm: FC<{ item?: PantryItem; action: string; title: string }
           >
             Save
           </button>
-          <a href="/" class="px-4 py-2 text-gray-500 hover:text-gray-700">
+          <a href={cancelHref} class="px-4 py-2 text-gray-500 hover:text-gray-700">
             Cancel
           </a>
         </div>
