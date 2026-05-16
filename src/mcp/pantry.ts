@@ -11,14 +11,7 @@ function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   return Math.ceil((expiresAt - today) / 86400000);
 }
 
-function formatItem(item: {
-  id: number;
-  name: string;
-  quantity: number;
-  unit: string | null;
-  purchased_at: string;
-  best_before_days: number | null;
-}): string {
+function formatItem(item: typeof pantry.$inferSelect): string {
   const qty = item.unit ? `${item.quantity}${item.unit}` : String(item.quantity);
   let line = `[${item.id}] ${item.name} x${qty} (purchased: ${item.purchased_at}`;
   if (item.best_before_days == null) {

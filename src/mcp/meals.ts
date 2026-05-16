@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { meals } from "@/db/schema.js";
 
-function formatMeal(m: { date: string; main_dish: string; side_dish: string | null }): string {
+function formatMeal(m: typeof meals.$inferSelect): string {
   return m.side_dish ? `${m.date}: ${m.main_dish} | ${m.side_dish}` : `${m.date}: ${m.main_dish}`;
 }
 
