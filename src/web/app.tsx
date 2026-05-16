@@ -1,5 +1,5 @@
 import { serveStatic } from "@hono/node-server/serve-static";
-import { eq, gte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry } from "@/db/schema.js";
@@ -7,9 +7,14 @@ import { Layout } from "@/web/views/layout.js";
 import { MealDetail } from "@/web/views/meal-detail.js";
 import { MealForm } from "@/web/views/meal-form.js";
 import { MealsView } from "@/web/views/meals.js";
+import { MealsCalendar } from "@/web/views/meals-calendar.js";
 import { PantryView } from "@/web/views/pantry.js";
 import { PantryDetail } from "@/web/views/pantry-detail.js";
 import { PantryForm } from "@/web/views/pantry-form.js";
+
+function lastDayOfMonth(year: number, month: number): string {
+  return new Date(year, month, 0).toISOString().slice(0, 10);
+}
 
 export function createApp(db: Db) {
   const app = new Hono();
@@ -35,10 +40,38 @@ export function createApp(db: Db) {
     );
   });
 
+  // Meal calendar
+  app.get("/meals", (c) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const monthParam = c.req.query("month") ?? today.slice(0, 7);
+    const [year, month] = monthParam.split("-").map(Number);
+    const from = `${monthParam}-01`;
+    const to = lastDayOfMonth(year, month);
+    const mealResults = db
+      .select()
+      .from(meals)
+      .where(and(gte(meals.date, from), lte(meals.date, to)))
+      .orderBy(meals.date)
+      .all();
+    return c.html(
+      <Layout>
+        <MealsCalendar meals={mealResults} year={year} month={month} />
+      </Layout>,
+    );
+  });
+
   // Meal new
-  app.get("/meals/new", (c) =>
-    c.html(<MealForm action="/meals" title="Add meal" cancelHref="/" />),
-  );
+  app.get("/meals/new", (c) => {
+    const date = c.req.query("date");
+    return c.html(
+      <MealForm
+        action="/meals"
+        title="Add meal"
+        cancelHref="/"
+        item={date ? { date } : undefined}
+      />,
+    );
+  });
 
   app.post("/meals", async (c) => {
     const body = await c.req.parseBody();

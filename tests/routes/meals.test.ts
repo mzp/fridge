@@ -13,6 +13,32 @@ function createTestDb(): Db {
   return db;
 }
 
+describe("GET /meals", () => {
+  it("shows current month name", async () => {
+    const db = createTestDb();
+    const res = await createApp(db).request("/meals");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("May 2026");
+  });
+
+  it("shows specified month with ?month param", async () => {
+    const db = createTestDb();
+    const res = await createApp(db).request("/meals?month=2026-03");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("March 2026");
+  });
+
+  it("shows dish name in calendar cell", async () => {
+    const db = createTestDb();
+    db.insert(schema.meals).values({ date: "2026-05-15", main_dish: "カレーライス" }).run();
+    const res = await createApp(db).request("/meals?month=2026-05");
+    const html = await res.text();
+    expect(html).toContain("カレーライス");
+  });
+});
+
 describe("GET /", () => {
   it("shows meals from today onwards", async () => {
     const db = createTestDb();
