@@ -4,4 +4,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  test: {
+    globalSetup: ["./tests/helpers/setup-logs.ts"],
+  },
 });

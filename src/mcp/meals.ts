@@ -3,10 +3,12 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { meals } from "@/db/schema.js";
+import { loggedTool } from "@/mcp/logged-tool.js";
 import { Meal } from "@/model/meal.js";
 
 export function registerMealTools(server: McpServer, db: Db) {
-  server.tool(
+  loggedTool(
+    server,
     "get_meals",
     "Get the list of planned meals for a given date range",
     {
@@ -34,7 +36,8 @@ export function registerMealTools(server: McpServer, db: Db) {
     },
   );
 
-  server.tool(
+  loggedTool(
+    server,
     "set_meal",
     "Set a planned meal for a given date. If a meal already exists for that date, it will be overwritten.",
     {
@@ -66,7 +69,8 @@ export function registerMealTools(server: McpServer, db: Db) {
     },
   );
 
-  server.tool(
+  loggedTool(
+    server,
     "delete_meal",
     "Delete a planned meal for a given date.",
     {

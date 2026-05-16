@@ -99,3 +99,18 @@ MCP runs over stdio transport. Claude Desktop can use:
 - Put shared business rules and model behavior, such as pantry expiry calculation, under `src/model/` instead of duplicating them in routes, views, or MCP tools.
 - Keep generated artifacts out of commits unless they are migrations or intentionally tracked assets.
 - Keep `CLAUDE.md`, `AGENTS.md`, and `.agents/workflows/` consistent when project structure or scripts change.
+
+## Logging
+
+Pino-based structured logs are written under `logs/` (gitignored).
+
+- `logs/web.jsonl` — every HTTP request handled by the web server. POST/PUT/PATCH/DELETE bodies are included. `npm run dev` also prints the same lines to stdout in pretty format so you can watch traffic live.
+- `logs/mcp.jsonl` — every MCP tool invocation (tool name, params, output summary, duration; stack trace on error). MCP runs over stdio, so logs go to file only.
+- `logs/{web,mcp}-test.jsonl` — logs from the test run. `tests/helpers/setup-logs.ts` wipes `logs/*-test.jsonl` at the start of every `npm run test` so each run is fresh.
+
+Check logs (`-S` keeps each entry on one line, matching the in-process dev output):
+```bash
+tail -f logs/web.jsonl | npx pino-pretty -S
+tail -f logs/mcp.jsonl | npx pino-pretty -S
+cat logs/mcp-test.jsonl | npx pino-pretty -S  # inspect what the last test run logged
+```

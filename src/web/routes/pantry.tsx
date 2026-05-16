@@ -2,6 +2,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { logger } from "@/logger/web.js";
 import { PantryItem } from "@/model/pantry-item.js";
 import { PantryDetail } from "@/web/views/pantry/detail.js";
 import { PantryForm } from "@/web/views/pantry/form.js";
@@ -13,17 +14,22 @@ export function createPantryRoutes(db: Db) {
 
   app.post("/", async (c) => {
     const body = await c.req.parseBody();
-    db.insert(pantry)
+    const name = String(body["name"]);
+    const stock_date = String(body["stock_date"]);
+    const inserted = db
+      .insert(pantry)
       .values({
-        name: String(body["name"]),
+        name,
         quantity: Number(body["quantity"]),
         unit: body["unit"] ? String(body["unit"]) : null,
-        stock_date: String(body["stock_date"]),
+        stock_date,
         best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
         category: PantryItem.normalizeCategory(body["category"]),
         status: "in_stock",
       })
-      .run();
+      .returning()
+      .get();
+    logger.info({ id: inserted.id, name, stock_date }, "pantry_created");
     return c.redirect("/");
   });
 
@@ -91,10 +97,18 @@ export function createPantryRoutes(db: Db) {
   });
 
   app.post("/:id/consume", (c) => {
-    db.update(pantry)
-      .set({ status: "consumed" })
-      .where(eq(pantry.id, Number(c.req.param("id"))))
-      .run();
+    const id = Number(c.req.param("id"));
+    db.update(pantry).set({ status: "consumed" }).where(eq(pantry.id, id)).run();
+    logger.info({ id }, "pantry_consumed");
+    return c.redirect("/");
+  });
+
+  app.post("/:id/delete", (c) => {
+    const id = Number(c.req.param("id"));
+    const existing = db.select().from(pantry).where(eq(pantry.id, id)).get();
+    db.delete(pantryLogs).where(eq(pantryLogs.pantry_id, id)).run();
+    db.delete(pantry).where(eq(pantry.id, id)).run();
+    logger.warn({ id, name: existing?.name ?? null }, "pantry_deleted");
     return c.redirect("/");
   });
 

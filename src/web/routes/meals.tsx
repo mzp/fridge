@@ -2,6 +2,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { logger } from "@/logger/web.js";
 import { Meal } from "@/model/meal.js";
 import { Layout } from "@/web/views/layout.js";
 import { MealsCalendar } from "@/web/views/meals/calendar.js";
@@ -55,8 +56,10 @@ export function createMealRoutes(db: Db) {
     const existing = db.select().from(meals).where(eq(meals.date, date)).get();
     if (existing) {
       db.update(meals).set({ main_dish, side_dish }).where(eq(meals.id, existing.id)).run();
+      logger.info({ id: existing.id, date, main_dish }, "meal_updated");
     } else {
-      db.insert(meals).values({ date, main_dish, side_dish }).run();
+      const inserted = db.insert(meals).values({ date, main_dish, side_dish }).returning().get();
+      logger.info({ id: inserted.id, date, main_dish }, "meal_created");
     }
     return c.redirect("/");
   });
@@ -101,9 +104,9 @@ export function createMealRoutes(db: Db) {
   });
 
   app.post("/:id/delete", (c) => {
-    db.delete(meals)
-      .where(eq(meals.id, Number(c.req.param("id"))))
-      .run();
+    const id = Number(c.req.param("id"));
+    db.delete(meals).where(eq(meals.id, id)).run();
+    logger.warn({ id }, "meal_deleted");
     return c.redirect("/");
   });
 

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { pantry, pantryLogs } from "@/db/schema.js";
+import { loggedTool } from "@/mcp/logged-tool.js";
 import { PantryItem } from "@/model/pantry-item.js";
 
 function formatItem(item: PantryItem): string {
@@ -19,7 +20,8 @@ function formatItem(item: PantryItem): string {
 }
 
 export function registerPantryTools(server: McpServer, db: Db) {
-  server.tool(
+  loggedTool(
+    server,
     "get_pantry",
     "Get the list of in-stock pantry items with IDs and expiry warnings",
     {},
@@ -43,7 +45,8 @@ export function registerPantryTools(server: McpServer, db: Db) {
     },
   );
 
-  server.tool(
+  loggedTool(
+    server,
     "set_pantry_item",
     "Add or update a pantry item by (name, stock_date). For recording usage, use use_pantry_item.",
     {
@@ -98,7 +101,8 @@ export function registerPantryTools(server: McpServer, db: Db) {
     },
   );
 
-  server.tool(
+  loggedTool(
+    server,
     "use_pantry_item",
     "Record usage of a pantry item by ID. Decrements quantity and logs the consumption. The meal for the date is automatically linked on the detail page, so no need to mention it in the note.",
     {
