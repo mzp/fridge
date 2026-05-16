@@ -22,25 +22,32 @@ fridge/
 ├── src/
 │   ├── web/              # Hono server process
 │   │   ├── index.tsx     # Hono server entrypoint
+│   │   ├── app.tsx       # Route definitions
 │   │   └── views/
-│   │       ├── layout.tsx    # Shared layout
-│   │       ├── meals.tsx     # Meal calendar view
-│   │       └── shopping.tsx  # Shopping list view
+│   │       ├── layout.tsx         # Shared layout + nav
+│   │       ├── meals/
+│   │       │   ├── meals.tsx          # Upcoming meals list (home)
+│   │       │   ├── meals-calendar.tsx # Monthly calendar view
+│   │       │   ├── meal-detail.tsx    # Meal detail page
+│   │       │   └── meal-form.tsx      # Add/edit meal form
+│   │       └── pantry/
+│   │           ├── pantry.tsx         # Pantry list (home)
+│   │           ├── pantry-detail.tsx  # Pantry item detail + usage log
+│   │           └── pantry-form.tsx    # Add/edit pantry form
 │   ├── mcp/              # MCP server process (stdio)
 │   │   ├── index.ts      # MCP server entrypoint
 │   │   ├── meals.ts      # Meal tools
-│   │   ├── pantry.ts     # Pantry tools
-│   │   └── shopping.ts   # Shopping list tools
+│   │   └── pantry.ts     # Pantry tools
 │   └── db/
 │       ├── schema.ts     # Drizzle schema
 │       └── index.ts      # DB connection
 ├── tests/
 │   ├── mcp/
-│   │   ├── e2e.test.ts   # MCP E2E via InMemoryTransport
 │   │   ├── meals.test.ts
 │   │   └── pantry.test.ts
 │   └── routes/
-│       └── meals.test.ts
+│       ├── meals.test.ts
+│       └── pantry.test.ts
 ├── public/               # Static assets
 ├── docs/                 # Architecture docs, ADRs
 ├── .claude/
@@ -90,8 +97,9 @@ MCP runs over stdio transport. Claude Desktop config:
 ```
 
 ## Agent Commands
-See `.agent/commands/` for shared slash commands:
+See `.claude/commands/` for shared slash commands:
 - `/precheck` — lint + format + test
+- `/self-review` — check for redundant types, unused imports/exports, and CLAUDE.md consistency (add `all` to scan all of `src/`)
 
 ## Detailed Docs
 See `docs/` for architecture decisions and tech stack rationale.

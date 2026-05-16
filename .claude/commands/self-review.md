@@ -1,4 +1,4 @@
-Review type definitions that duplicate information already available from `src/db/schema.ts`.
+Review type definitions that duplicate information already available from `src/db/schema.ts`, check for unused imports and unused exported functions, and verify `CLAUDE.md` is internally consistent.
 
 ## Scope
 
@@ -17,11 +17,21 @@ Then scan the target files for:
 
 3. **Type aliases that just re-export a schema type** — unnecessary wrappers around an already-available inferred type.
 
+4. **Unused imports** — `import` statements (or individual named imports) that are never referenced in the file body. Check each imported symbol against its usage in the file.
+
+5. **Unused exported functions** — `export function` / `export const` declarations that are never imported anywhere in `src/` or `tests/`. Search across all files to verify each export is actually consumed.
+
+6. **CLAUDE.md contradictions** — Read `CLAUDE.md` and check for internal inconsistencies:
+   - Commands listed that don't exist in `package.json` scripts
+   - File paths or directory names mentioned that don't exist on disk
+   - Tech stack entries that contradict what's actually installed (check `package.json` dependencies)
+   - Descriptions of project structure that don't match the actual layout under `src/`
+
 ## How to report
 
 For each issue found, report:
 - File and line number
 - The current definition
-- The suggested replacement using schema-derived types
+- The suggested fix (replacement type, import removal, or note that the export can be deleted)
 
 If nothing is found, confirm the codebase is clean.

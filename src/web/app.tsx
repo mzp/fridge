@@ -4,13 +4,13 @@ import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
-import { MealDetail } from "@/web/views/meal-detail.js";
-import { MealForm } from "@/web/views/meal-form.js";
-import { MealsView } from "@/web/views/meals.js";
-import { MealsCalendar } from "@/web/views/meals-calendar.js";
-import { PantryView } from "@/web/views/pantry.js";
-import { PantryDetail } from "@/web/views/pantry-detail.js";
-import { PantryForm } from "@/web/views/pantry-form.js";
+import { MealDetail } from "@/web/views/meals/meal-detail.js";
+import { MealForm } from "@/web/views/meals/meal-form.js";
+import { MealsView } from "@/web/views/meals/meals.js";
+import { MealsCalendar } from "@/web/views/meals/meals-calendar.js";
+import { PantryDetail } from "@/web/views/pantry/pantry-detail.js";
+import { PantryForm } from "@/web/views/pantry/pantry-form.js";
+import { PantryView } from "@/web/views/pantry/pantry.js";
 
 function lastDayOfMonth(year: number, month: number): string {
   return new Date(year, month, 0).toISOString().slice(0, 10);
@@ -44,7 +44,7 @@ export function createApp(db: Db) {
   app.get("/meals", (c) => {
     const today = new Date().toISOString().slice(0, 10);
     const monthParam = c.req.query("month") ?? today.slice(0, 7);
-    const [year, month] = monthParam.split("-").map(Number);
+    const [year, month] = monthParam.split("-").map(Number) as [number, number];
     const from = `${monthParam}-01`;
     const to = lastDayOfMonth(year, month);
     const mealResults = db
@@ -68,7 +68,7 @@ export function createApp(db: Db) {
         action="/meals"
         title="Add meal"
         cancelHref="/"
-        item={date ? { date } : undefined}
+        {...(date ? { item: { date } } : {})}
       />,
     );
   });

@@ -71,8 +71,9 @@ describe("set_pantry_item", () => {
     });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content[0]?.text).toContain("鮭 x5切れ (purchased: 2026-05-10)");
-    expect(list.content[0]?.text).toContain("鮭 x3切れ (purchased: 2026-05-18)");
+    const text = (list.content as Array<{ type: string; text: string }>)[0]?.text ?? "";
+    expect(text).toContain("鮭 x5切れ (purchased: 2026-05-10)");
+    expect(text).toContain("鮭 x3切れ (purchased: 2026-05-18)");
   });
 });
 
