@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
-import type { Db } from "../db/index.js";
-import { meals } from "../db/schema.js";
+import type { Db } from "@/db/index.js";
+import { meals } from "@/db/schema.js";
 
 function formatMeal(m: { date: string; main_dish: string; side_dish: string | null }): string {
   return m.side_dish ? `${m.date}: ${m.main_dish} | ${m.side_dish}` : `${m.date}: ${m.main_dish}`;
@@ -58,7 +58,11 @@ export function registerMealTools(server: McpServer, db: Db) {
           content: [{ type: "text", text: `Updated meal: ${formatMeal(updated)}` }],
         };
       }
-      const inserted = db.insert(meals).values({ date, main_dish, side_dish: side_dish ?? null }).returning().get();
+      const inserted = db
+        .insert(meals)
+        .values({ date, main_dish, side_dish: side_dish ?? null })
+        .returning()
+        .get();
       return {
         content: [{ type: "text", text: `Added meal: ${formatMeal(inserted)}` }],
       };

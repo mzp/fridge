@@ -1,8 +1,8 @@
 import { serveStatic } from "@hono/node-server/serve-static";
 import { gte } from "drizzle-orm";
 import { Hono } from "hono";
-import type { Db } from "../db/index.js";
-import { meals } from "../db/schema.js";
+import type { Db } from "@/db/index.js";
+import { meals } from "@/db/schema.js";
 import { MealsView } from "./views/meals.js";
 
 export function createApp(db: Db) {

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { db } from "../db/index.js";
+import { db } from "@/db/index.js";
 import { registerMealTools } from "./meals.js";
 
 const server = new McpServer({
