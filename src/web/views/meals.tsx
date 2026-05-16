@@ -1,5 +1,5 @@
 import type { FC } from "hono/jsx";
-import { Layout } from "./layout.js";
+import { Layout } from "@/web/views/layout.js";
 
 type Meal = {
   id: number;

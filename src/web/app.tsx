@@ -3,7 +3,7 @@ import { gte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals } from "@/db/schema.js";
-import { MealsView } from "./views/meals.js";
+import { MealsView } from "@/web/views/meals.js";
 
 export function createApp(db: Db) {
   const app = new Hono();
