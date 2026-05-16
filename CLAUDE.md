@@ -83,8 +83,8 @@ MCP runs over stdio transport. Claude Desktop config:
 {
   "mcpServers": {
     "fridge": {
-      "command": "npm",
-      "args": ["--prefix", "/Users/mzp/ghq/github.com/mzp/fridge", "run", "--silent", "mcp"]
+      "command": "/bin/sh",
+      "args": ["-c", "cd /Users/mzp/ghq/github.com/mzp/fridge && exec /Users/mzp/.volta/bin/volta run npm run --silent mcp"]
     }
   }
 }
