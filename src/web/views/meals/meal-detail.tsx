@@ -3,7 +3,7 @@ import type { meals, pantry, pantryLogs } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 
 type Meal = typeof meals.$inferSelect;
-type PantryUsageEntry = Pick<typeof pantry.$inferSelect, "name" | "unit"> &
+type PantryUsageEntry = Pick<typeof pantry.$inferSelect, "id" | "name" | "unit"> &
   Pick<typeof pantryLogs.$inferSelect, "delta" | "note">;
 
 export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = ({
@@ -52,7 +52,9 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
                 : String(Math.abs(entry.delta));
               return (
                 <li key={i} class="flex gap-2 text-gray-700">
-                  <span class="font-medium">{entry.name}</span>
+                  <a href={`/pantry/${entry.id}`} class="font-medium hover:text-emerald-600 hover:underline">
+                    {entry.name}
+                  </a>
                   <span class="text-gray-400">{qty}</span>
                   {entry.note && <span class="text-gray-400">— {entry.note}</span>}
                 </li>

@@ -21,7 +21,7 @@ function daysLabel(days: number | null): string {
   return `${days}d`;
 }
 
-const PantryRow: FC<{ item: PantryItem }> = ({ item }) => {
+const PantryRow: FC<{ item: PantryItem; used: boolean }> = ({ item, used }) => {
   const days =
     item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
   return (
@@ -30,6 +30,9 @@ const PantryRow: FC<{ item: PantryItem }> = ({ item }) => {
         <a href={`/pantry/${item.id}`} class="hover:text-emerald-600 hover:underline">
           {item.name}
         </a>
+        {used && (
+          <span class="ml-2 text-xs text-gray-400 border border-gray-200 rounded px-1">使用中</span>
+        )}
       </td>
       <td class="py-2 pr-4 text-gray-600">
         {item.quantity}
@@ -41,16 +44,10 @@ const PantryRow: FC<{ item: PantryItem }> = ({ item }) => {
   );
 };
 
-export const PantryView: FC<{ items: PantryItem[] }> = ({ items }) => (
+export const PantryView: FC<{ items: PantryItem[]; usedIds: Set<number> }> = ({ items, usedIds }) => (
   <section>
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4">
       <h2 class="text-xl font-bold text-emerald-600">Pantry</h2>
-      <a
-        href="/pantry/new"
-        class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
-      >
-        Add item
-      </a>
     </div>
     {items.length === 0 ? (
       <p class="text-gray-500">No items in stock.</p>
@@ -66,7 +63,7 @@ export const PantryView: FC<{ items: PantryItem[] }> = ({ items }) => (
         </thead>
         <tbody>
           {items.map((item) => (
-            <PantryRow key={item.id} item={item} />
+            <PantryRow key={item.id} item={item} used={usedIds.has(item.id)} />
           ))}
         </tbody>
       </table>

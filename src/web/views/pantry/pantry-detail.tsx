@@ -17,7 +17,11 @@ function formatDeltaLabel(delta: number, unit: string | null): string {
   return delta >= 0 ? `+${qty}` : `-${qty}`;
 }
 
-export const PantryDetail: FC<{ item: PantryItem; logs: PantryLog[] }> = ({ item, logs }) => {
+export const PantryDetail: FC<{
+  item: PantryItem;
+  logs: PantryLog[];
+  mealsByDate: Record<string, { id: number; main_dish: string }>;
+}> = ({ item, logs, mealsByDate }) => {
   const days =
     item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
 
@@ -93,7 +97,17 @@ export const PantryDetail: FC<{ item: PantryItem; logs: PantryLog[] }> = ({ item
               <tbody>
                 {logs.map((log) => (
                   <tr key={log.id} class="border-b border-gray-100">
-                    <td class="py-2 pr-4 text-gray-600">{log.recorded_at}</td>
+                    <td class="py-2 pr-4 text-gray-600">
+                      {log.recorded_at}
+                      {mealsByDate[log.recorded_at] != null && (
+                        <a
+                          href={`/meals/${mealsByDate[log.recorded_at]?.id}`}
+                          class="ml-2 text-emerald-600 hover:underline"
+                        >
+                          {mealsByDate[log.recorded_at]?.main_dish}
+                        </a>
+                      )}
+                    </td>
                     <td
                       class={`py-2 pr-4 font-medium ${log.delta < 0 ? "text-red-600" : "text-emerald-600"}`}
                     >

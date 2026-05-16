@@ -86,7 +86,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
 
   server.tool(
     "use_pantry_item",
-    "Record usage of a pantry item by ID. Decrements quantity and logs the consumption.",
+    "Record usage of a pantry item by ID. Decrements quantity and logs the consumption. The meal for the date is automatically linked on the detail page, so no need to mention it in the note.",
     {
       id: z.number().int().describe("Pantry item ID (from get_pantry)"),
       quantity_used: z
@@ -97,7 +97,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
         .optional(),
       use_all: z.boolean().describe("Set to true to use all remaining stock.").optional(),
       date: z.string().date().describe("Date of use (YYYY-MM-DD, defaults to today)").optional(),
-      note: z.string().describe("Note (e.g. dish name)").optional(),
+      note: z.string().describe("Optional note, e.g. fractional amount used (\"1/4 of one\").").optional(),
     },
     ({ id, quantity_used, use_all, date, note }) => {
       const today = new Date().toISOString().slice(0, 10);

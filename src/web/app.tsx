@@ -1,5 +1,5 @@
 import { serveStatic } from "@hono/node-server/serve-static";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
@@ -23,18 +23,33 @@ export function createApp(db: Db) {
 
   app.get("/", (c) => {
     const today = new Date().toISOString().slice(0, 10);
+    const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
     const mealResults = db
       .select()
       .from(meals)
-      .where(gte(meals.date, today))
+      .where(gte(meals.date, twoDaysAgo))
       .orderBy(meals.date)
       .all();
-    const pantryItems = db.select().from(pantry).where(eq(pantry.status, "in_stock")).all();
+    const pantryItems = db
+      .select()
+      .from(pantry)
+      .where(eq(pantry.status, "in_stock"))
+      .all()
+      .sort((a, b) => {
+        if (a.best_before_days == null) return 1;
+        if (b.best_before_days == null) return -1;
+        const expiryA = new Date(a.purchased_at).getTime() + a.best_before_days * 86400000;
+        const expiryB = new Date(b.purchased_at).getTime() + b.best_before_days * 86400000;
+        return expiryA - expiryB;
+      });
+    const usedIds = new Set(
+      db.select({ pantry_id: pantryLogs.pantry_id }).from(pantryLogs).all().map((r) => r.pantry_id),
+    );
     return c.html(
       <Layout>
         <main class="max-w-2xl mx-auto px-4 py-8 space-y-10">
-          <MealsView meals={mealResults} />
-          <PantryView items={pantryItems} />
+          <MealsView meals={mealResults} today={today} />
+          <PantryView items={pantryItems} usedIds={usedIds} />
         </main>
       </Layout>,
     );
@@ -97,6 +112,7 @@ export function createApp(db: Db) {
     if (!item) return c.notFound();
     const pantryUsage = db
       .select({
+        id: pantry.id,
         name: pantry.name,
         delta: pantryLogs.delta,
         unit: pantry.unit,
@@ -182,7 +198,18 @@ export function createApp(db: Db) {
       .where(eq(pantryLogs.pantry_id, item.id))
       .orderBy(desc(pantryLogs.recorded_at))
       .all();
-    return c.html(<PantryDetail item={item} logs={logs} />);
+    const logDates = [...new Set(logs.map((l) => l.recorded_at))];
+    const mealsByDate: Record<string, { id: number; main_dish: string }> = {};
+    if (logDates.length > 0) {
+      for (const m of db
+        .select({ id: meals.id, date: meals.date, main_dish: meals.main_dish })
+        .from(meals)
+        .where(inArray(meals.date, logDates))
+        .all()) {
+        mealsByDate[m.date] = { id: m.id, main_dish: m.main_dish };
+      }
+    }
+    return c.html(<PantryDetail item={item} logs={logs} mealsByDate={mealsByDate} />);
   });
 
   // Pantry edit

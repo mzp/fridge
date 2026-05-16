@@ -56,15 +56,15 @@ describe("POST /meals/:id/delete", () => {
 });
 
 describe("GET /", () => {
-  it("shows meals from today onwards", async () => {
+  it("shows past 2 days and future meals, hides older ones", async () => {
     const db = createTestDb();
     const today = new Date().toISOString().slice(0, 10);
     const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
 
     db.insert(schema.meals)
       .values([
-        { date: yesterday, main_dish: "過去の料理" },
+        { date: threeDaysAgo, main_dish: "過去の料理" },
         { date: today, main_dish: "カレーライス", side_dish: "サラダ" },
         { date: tomorrow, main_dish: "肉じゃが" },
       ])

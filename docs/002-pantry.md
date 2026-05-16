@@ -1,20 +1,29 @@
-# ADR 002: Pantry Inventory Management
+# ADR 002: パントリー在庫管理
 
-## Summary
-Track fridge inventory by recording purchase date and per-item storage duration, and automatically warn when items are approaching expiry.
+## 概要
 
-## Decisions
+購入日と保存期間を記録して冷蔵庫の在庫を管理する。消費期限が近づいたアイテムに自動で警告を出す。
 
-**Item identity key**: Items are uniquely identified by `(name, purchased_at)`. The same ingredient purchased on different dates is tracked as separate batches, each with its own quantity and expiry. Calling `set_pantry_item` with the same `(name, purchased_at)` pair updates the existing batch; a different `purchased_at` creates a new batch.
+## 決定事項
 
-**Expiry warning logic**: Instead of storing an absolute expiry date, store the purchase date and a per-item storage duration (`best_before_days`). The expiry date is derived as `purchased_at + best_before_days`. Items with no `best_before_days` produce no warning.
+**アイテムの同一性キー**: 消費期限を管理したいので、同じ食材でも購入日が異なれば別バッチとして管理する。MCPの通信ログを読むときに大変になるので、ログを伴う消費操作はIDを指定で行なう。
 
-**Warning thresholds**: ≤ 0 days remaining = expired; 1–3 days remaining = expiring soon.
+**賞味期限の保存方法**: 絶対的な期限日を保存するのではなく、入力時に記録しやすい購入日 `purchased_at` を保持する。必須となる情報はなるべく少なくしたい。MCP経由で用意に記録できる使用ログは積極的に使いまわす。
 
-**Item removal**: Items are not physically deleted. A `status` column tracks `in_stock` / `consumed`. The UI and `get_pantry` only show `in_stock` items; consumed items remain in the database as a record. Setting quantity to 0 via `set_pantry_item` automatically marks the item as consumed.
+**アイテムの削除**: アイテムはDBから物理削除しない。`status` カラムで `in_stock` / `consumed` を管理し、UIと `get_pantry` は `in_stock` のみ表示する。消費済みアイテムはDBに履歴として残る。
 
-**Usage log**: Every quantity change via `set_pantry_item` is automatically recorded in `pantry_logs` as a `delta` (positive = restocked, negative = used). The detail page shows this history. The `consume_pantry_item` MCP tool has been removed; partial and full consumption are both handled through quantity updates, which auto-log the change.
+**使用ログ**: `use_pantry_item` による数量変更はすべて `pantry_logs` に `delta` として自動記録される。詳細ページでこの履歴を閲覧できる。なお、`set_pantry_item` はCRUD操作に専念し、ログは記録しない。
 
-## Rejected alternatives
-- **Store absolute expiry date**: Requires recalculating per item type each time; can't reuse standard durations across the same food category.
-- **Physical delete**: Adopted status management instead to preserve consumption history.
+## 暫定
+実装はしているが今後変更の可能性がある。実装の支障になったら変更を検討する。
+
+**警告の閾値**: 残り 0 日以下 = 期限切れ、残り 1〜3 日 = 期限間近。
+
+**賞味期限の計算方法**: アイテムごとの保存期間 `best_before_days` を保存し、期限日は `purchased_at + best_before_days` として導出する。`best_before_days` が未設定のアイテムには警告を出さない。
+
+**端数量の管理**: たまねぎ 1/4 個、しめじ 0.5 パックのように、整数で管理できない部分消費が実運用では頻繁に起きる。きちんと管理しようとすると数量を小数対応にするなどの複雑さが生じるため、「きっちり管理できないものは管理をあきらめ、ログだけ残す」方針を取っている。`use_pantry_item` の `note` に「1/4使用」などと書いて記録し、正確な残量は手動で把握する。
+
+## 却下した代替案
+
+- **絶対的な期限日を保存する**: アイテム種別ごとに毎回計算が必要になり、同じ食品カテゴリで標準的な保存期間を使い回せなくなる。
+- **物理削除**: 消費履歴を残したいため、ステータス管理を採用した。
