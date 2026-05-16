@@ -62,7 +62,7 @@ const DayCell: FC<{
         <div class="text-xs text-gray-400 mb-1">{day}</div>
         <a
           href={meal.detailPath()}
-          class="text-xs text-emerald-700 hover:underline leading-tight block"
+          class="text-xs text-emerald-700 hover:underline leading-tight block break-words"
         >
           {meal.record.main_dish}
         </a>
@@ -113,7 +113,12 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
           Add meal
         </a>
       </div>
-      <table class="w-full border-collapse">
+      <table class="w-full table-fixed border-collapse">
+        <colgroup>
+          {DAY_NAMES.map((d) => (
+            <col key={d} class="w-[14.285714%]" />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             {DAY_NAMES.map((d) => (
