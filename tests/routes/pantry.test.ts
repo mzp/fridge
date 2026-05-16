@@ -16,7 +16,7 @@ function createTestDb(): Db {
 function seedItem(db: Db) {
   return db
     .insert(schema.pantry)
-    .values({ name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15", status: "in_stock" })
+    .values({ name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15", status: "in_stock" })
     .returning()
     .get();
 }
@@ -37,7 +37,7 @@ describe("POST /pantry", () => {
     const res = await createApp(db).request("/pantry", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "name=%E7%89%9B%E4%B9%B3&quantity=2&unit=%E6%9C%AC&purchased_at=2026-05-15&best_before_days=7",
+      body: "name=%E7%89%9B%E4%B9%B3&quantity=2&unit=%E6%9C%AC&stock_date=2026-05-15&best_before_days=7",
     });
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe("/");
@@ -106,7 +106,7 @@ describe("POST /pantry/:id", () => {
     const res = await createApp(db).request(`/pantry/${item.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `name=%E5%8D%B5&quantity=10&unit=%E5%80%8B&purchased_at=2026-05-15&best_before_days=`,
+      body: `name=%E5%8D%B5&quantity=10&unit=%E5%80%8B&stock_date=2026-05-15&best_before_days=`,
     });
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe(`/pantry/${item.id}`);

@@ -32,48 +32,50 @@ describe("set_pantry_item", () => {
 
     const added = await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15" },
+      arguments: { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
     });
     expect(added.content).toEqual([
-      { type: "text", text: "Added: [1] 卵 x6個 (purchased: 2026-05-15)" },
+      { type: "text", text: "Added: [1] 卵 x6個 (stocked: 2026-05-15)" },
     ]);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([{ type: "text", text: "[1] 卵 x6個 (purchased: 2026-05-15)" }]);
-  });
-
-  it("updates an existing item (same name, same purchased_at)", async () => {
-    const client = await createTestClient(createTestDb());
-
-    await client.callTool({
-      name: "set_pantry_item",
-      arguments: { name: "牛乳", quantity: 1, purchased_at: "2026-05-15" },
-    });
-    const updated = await client.callTool({
-      name: "set_pantry_item",
-      arguments: { name: "牛乳", quantity: 2, purchased_at: "2026-05-15" },
-    });
-    expect(updated.content).toEqual([
-      { type: "text", text: "Updated: [1] 牛乳 x2 (purchased: 2026-05-15)" },
+    expect(list.content).toEqual([
+      { type: "text", text: "[ingredient]\n[1] 卵 x6個 (stocked: 2026-05-15)" },
     ]);
   });
 
-  it("treats same name with different purchased_at as separate batches", async () => {
+  it("updates an existing item (same name, same stock_date)", async () => {
     const client = await createTestClient(createTestDb());
 
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "鮭", quantity: 5, unit: "切れ", purchased_at: "2026-05-10" },
+      arguments: { name: "牛乳", quantity: 1, stock_date: "2026-05-15" },
+    });
+    const updated = await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "牛乳", quantity: 2, stock_date: "2026-05-15" },
+    });
+    expect(updated.content).toEqual([
+      { type: "text", text: "Updated: [1] 牛乳 x2 (stocked: 2026-05-15)" },
+    ]);
+  });
+
+  it("treats same name with different stock_date as separate batches", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "鮭", quantity: 5, unit: "切れ", stock_date: "2026-05-10" },
     });
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "鮭", quantity: 3, unit: "切れ", purchased_at: "2026-05-18" },
+      arguments: { name: "鮭", quantity: 3, unit: "切れ", stock_date: "2026-05-18" },
     });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
     const text = (list.content as Array<{ type: string; text: string }>)[0]?.text ?? "";
-    expect(text).toContain("鮭 x5切れ (purchased: 2026-05-10)");
-    expect(text).toContain("鮭 x3切れ (purchased: 2026-05-18)");
+    expect(text).toContain("鮭 x5切れ (stocked: 2026-05-10)");
+    expect(text).toContain("鮭 x3切れ (stocked: 2026-05-18)");
   });
 });
 
@@ -83,7 +85,7 @@ describe("use_pantry_item", () => {
 
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15" },
+      arguments: { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
     });
     const result = await client.callTool({
       name: "use_pantry_item",
@@ -92,7 +94,9 @@ describe("use_pantry_item", () => {
     expect(result.content).toEqual([{ type: "text", text: "Used 2個 of 卵. Remaining: 4個." }]);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([{ type: "text", text: "[1] 卵 x4個 (purchased: 2026-05-15)" }]);
+    expect(list.content).toEqual([
+      { type: "text", text: "[ingredient]\n[1] 卵 x4個 (stocked: 2026-05-15)" },
+    ]);
   });
 
   it("marks item as consumed when all quantity is used", async () => {
@@ -100,7 +104,7 @@ describe("use_pantry_item", () => {
 
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "卵", quantity: 2, purchased_at: "2026-05-15" },
+      arguments: { name: "卵", quantity: 2, stock_date: "2026-05-15" },
     });
     const result = await client.callTool({
       name: "use_pantry_item",
@@ -119,7 +123,7 @@ describe("use_pantry_item", () => {
 
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "牛乳", quantity: 3, unit: "本", purchased_at: "2026-05-15" },
+      arguments: { name: "牛乳", quantity: 3, unit: "本", stock_date: "2026-05-15" },
     });
     const result = await client.callTool({
       name: "use_pantry_item",

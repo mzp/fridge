@@ -14,11 +14,12 @@ export const pantry = sqliteTable(
     name: text().notNull(),
     quantity: int().notNull(),
     unit: text(),
-    purchased_at: text().notNull(),
+    stock_date: text().notNull(),
     best_before_days: int(),
     status: text().notNull().default("in_stock"),
+    category: text().notNull().default("ingredient"),
   },
-  (t) => [uniqueIndex("pantry_name_date_idx").on(t.name, t.purchased_at)],
+  (t) => [uniqueIndex("pantry_name_date_idx").on(t.name, t.stock_date)],
 );
 
 export const pantryLogs = sqliteTable("pantry_logs", {

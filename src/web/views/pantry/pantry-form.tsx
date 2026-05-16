@@ -57,14 +57,14 @@ export const PantryForm: FC<{
           </div>
         </div>
         <div>
-          <label for="purchased_at" class="block text-sm text-gray-500 mb-1">
-            Purchased at
+          <label for="stock_date" class="block text-sm text-gray-500 mb-1">
+            Stock date
           </label>
           <input
             type="date"
-            id="purchased_at"
-            name="purchased_at"
-            value={item?.purchased_at ?? ""}
+            id="stock_date"
+            name="stock_date"
+            value={item?.stock_date ?? ""}
             required
             class="w-full border border-gray-300 rounded px-3 py-2"
           />
@@ -82,6 +82,23 @@ export const PantryForm: FC<{
             placeholder="leave blank if unknown"
             class="w-full border border-gray-300 rounded px-3 py-2"
           />
+        </div>
+        <div>
+          <label for="category" class="block text-sm text-gray-500 mb-1">
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            class="w-full border border-gray-300 rounded px-3 py-2 bg-white"
+          >
+            <option value="ingredient" selected={item?.category !== "prepared"}>
+              Ingredient
+            </option>
+            <option value="prepared" selected={item?.category === "prepared"}>
+              Prepared dish
+            </option>
+          </select>
         </div>
         <div class="flex gap-3 pt-2">
           <button

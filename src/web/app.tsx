@@ -38,8 +38,8 @@ export function createApp(db: Db) {
       .sort((a, b) => {
         if (a.best_before_days == null) return 1;
         if (b.best_before_days == null) return -1;
-        const expiryA = new Date(a.purchased_at).getTime() + a.best_before_days * 86400000;
-        const expiryB = new Date(b.purchased_at).getTime() + b.best_before_days * 86400000;
+        const expiryA = new Date(a.stock_date).getTime() + a.best_before_days * 86400000;
+        const expiryB = new Date(b.stock_date).getTime() + b.best_before_days * 86400000;
         return expiryA - expiryB;
       });
     const usedIds = new Set(
@@ -49,7 +49,8 @@ export function createApp(db: Db) {
       <Layout>
         <main class="max-w-2xl mx-auto px-4 py-8 space-y-10">
           <MealsView meals={mealResults} today={today} />
-          <PantryView items={pantryItems} usedIds={usedIds} />
+          <PantryView category="prepared" items={pantryItems} usedIds={usedIds} />
+          <PantryView category="ingredient" items={pantryItems} usedIds={usedIds} />
         </main>
       </Layout>,
     );
@@ -176,8 +177,9 @@ export function createApp(db: Db) {
         name: String(body["name"]),
         quantity: Number(body["quantity"]),
         unit: body["unit"] ? String(body["unit"]) : null,
-        purchased_at: String(body["purchased_at"]),
+        stock_date: String(body["stock_date"]),
         best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
+        category: String(body["category"]) === "prepared" ? "prepared" : "ingredient",
         status: "in_stock",
       })
       .run();
@@ -238,8 +240,9 @@ export function createApp(db: Db) {
         name: String(body["name"]),
         quantity: Number(body["quantity"]),
         unit: body["unit"] ? String(body["unit"]) : null,
-        purchased_at: String(body["purchased_at"]),
+        stock_date: String(body["stock_date"]),
         best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
+        category: String(body["category"]) === "prepared" ? "prepared" : "ingredient",
       })
       .where(eq(pantry.id, id))
       .run();

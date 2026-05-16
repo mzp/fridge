@@ -97,7 +97,7 @@ describe("GET /", () => {
         name: "卵",
         quantity: 6,
         unit: "個",
-        purchased_at: "2026-05-15",
+        stock_date: "2026-05-15",
         status: "in_stock",
       })
       .run();

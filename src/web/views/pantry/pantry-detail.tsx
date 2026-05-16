@@ -5,8 +5,8 @@ import { Layout } from "@/web/views/layout.js";
 type PantryItem = typeof pantry.$inferSelect;
 type PantryLog = typeof pantryLogs.$inferSelect;
 
-function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
-  const purchased = new Date(purchasedAt).getTime();
+function daysRemaining(stockDate: string, bestBeforeDays: number): number {
+  const purchased = new Date(stockDate).getTime();
   const today = new Date().setHours(0, 0, 0, 0);
   return Math.ceil((purchased + bestBeforeDays * 86400000 - today) / 86400000);
 }
@@ -23,7 +23,7 @@ export const PantryDetail: FC<{
   mealsByDate: Record<string, { id: number; main_dish: string }>;
 }> = ({ item, logs, mealsByDate }) => {
   const days =
-    item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
+    item.best_before_days == null ? null : daysRemaining(item.stock_date, item.best_before_days);
 
   return (
     <Layout>
@@ -41,8 +41,8 @@ export const PantryDetail: FC<{
             </dd>
           </div>
           <div class="flex gap-4">
-            <dt class="w-32 text-gray-500">Purchased at</dt>
-            <dd>{item.purchased_at}</dd>
+            <dt class="w-32 text-gray-500">Stock date</dt>
+            <dd>{item.stock_date}</dd>
           </div>
           <div class="flex gap-4">
             <dt class="w-32 text-gray-500">Best before</dt>
@@ -53,14 +53,14 @@ export const PantryDetail: FC<{
               <dt class="w-32 text-gray-500">Expires in</dt>
               <dd
                 class={
-                  days <= 0
+                  days < 0
                     ? "text-red-600 font-medium"
                     : days <= 3
                       ? "text-yellow-600 font-medium"
                       : ""
                 }
               >
-                {days <= 0 ? "Expired" : `${days} days`}
+                {days < 0 ? "Expired" : `${days} days`}
               </dd>
             </div>
           )}
