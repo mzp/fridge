@@ -1,13 +1,5 @@
 import type { FC } from "hono/jsx";
-import type { pantry } from "@/db/schema.js";
-
-type PantryItem = typeof pantry.$inferSelect;
-
-function daysRemaining(stockDate: string, bestBeforeDays: number): number {
-  const purchased = new Date(stockDate).getTime();
-  const today = new Date().setHours(0, 0, 0, 0);
-  return Math.ceil((purchased + bestBeforeDays * 86400000 - today) / 86400000);
-}
+import type { PantryCategory, PantryItem } from "@/model/pantry-item.js";
 
 function rowClass(days: number | null): string {
   if (days != null && days < 0) return "border-b border-gray-100 bg-red-50";
@@ -22,15 +14,14 @@ function daysLabel(days: number | null): string {
 }
 
 const PantryRow: FC<{ item: PantryItem; used: boolean }> = ({ item, used }) => {
-  const days =
-    item.best_before_days == null ? null : daysRemaining(item.stock_date, item.best_before_days);
-  const href = `/pantry/${item.id}`;
+  const days = item.daysRemaining();
+  const href = `/pantry/${item.record.id}`;
   const linkClass = "block py-2 hover:text-emerald-600";
   return (
-    <tr key={item.id} class={rowClass(days)}>
+    <tr key={item.record.id} class={rowClass(days)}>
       <td class="pr-4">
         <a href={href} class={linkClass}>
-          {item.name}
+          {item.record.name}
           {used && (
             <span class="ml-2 text-xs text-gray-400 border border-gray-200 rounded px-1">
               in use
@@ -40,13 +31,12 @@ const PantryRow: FC<{ item: PantryItem; used: boolean }> = ({ item, used }) => {
       </td>
       <td class="pr-4 text-gray-600">
         <a href={href} class={linkClass}>
-          {item.quantity}
-          {item.unit ?? ""}
+          {item.quantityLabel()}
         </a>
       </td>
       <td class="pr-4 text-gray-600">
         <a href={href} class={linkClass}>
-          {item.stock_date}
+          {item.record.stock_date}
         </a>
       </td>
       <td class="text-gray-600">
@@ -70,7 +60,7 @@ const PantryTable: FC<{ items: PantryItem[]; usedIds: Set<number> }> = ({ items,
     </thead>
     <tbody>
       {items.map((item) => (
-        <PantryRow key={item.id} item={item} used={usedIds.has(item.id)} />
+        <PantryRow key={item.record.id} item={item} used={usedIds.has(item.record.id)} />
       ))}
     </tbody>
   </table>
@@ -79,9 +69,9 @@ const PantryTable: FC<{ items: PantryItem[]; usedIds: Set<number> }> = ({ items,
 export const PantryView: FC<{
   items: PantryItem[];
   usedIds: Set<number>;
-  category: "prepared" | "ingredient";
+  category: PantryCategory;
 }> = ({ items, usedIds, category }) => {
-  const filtered = items.filter((i) => i.category === category);
+  const filtered = items.filter((i) => i.belongsToCategory(category));
   const title = category === "prepared" ? "Prepared dishes" : "Ingredients";
 
   return (

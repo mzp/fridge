@@ -1,29 +1,16 @@
 import type { FC } from "hono/jsx";
-import type { pantry, pantryLogs } from "@/db/schema.js";
+import type { pantryLogs } from "@/db/schema.js";
+import type { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
 
-type PantryItem = typeof pantry.$inferSelect;
 type PantryLog = typeof pantryLogs.$inferSelect;
-
-function daysRemaining(stockDate: string, bestBeforeDays: number): number {
-  const purchased = new Date(stockDate).getTime();
-  const today = new Date().setHours(0, 0, 0, 0);
-  return Math.ceil((purchased + bestBeforeDays * 86400000 - today) / 86400000);
-}
-
-function formatDeltaLabel(delta: number, unit: string | null): string {
-  const abs = Math.abs(delta);
-  const qty = unit ? `${abs}${unit}` : String(abs);
-  return delta >= 0 ? `+${qty}` : `-${qty}`;
-}
 
 export const PantryDetail: FC<{
   item: PantryItem;
   logs: PantryLog[];
   mealsByDate: Record<string, { id: number; main_dish: string }>;
 }> = ({ item, logs, mealsByDate }) => {
-  const days =
-    item.best_before_days == null ? null : daysRemaining(item.stock_date, item.best_before_days);
+  const days = item.daysRemaining();
 
   return (
     <Layout>
@@ -31,22 +18,21 @@ export const PantryDetail: FC<{
         <a href="/" class="text-sm text-gray-400 hover:text-gray-600">
           ← Back
         </a>
-        <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.name}</h1>
+        <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.record.name}</h1>
         <dl class="space-y-3 text-sm mb-8">
           <div class="flex gap-4">
             <dt class="w-32 text-gray-500">Quantity</dt>
-            <dd>
-              {item.quantity}
-              {item.unit ?? ""}
-            </dd>
+            <dd>{item.quantityLabel()}</dd>
           </div>
           <div class="flex gap-4">
             <dt class="w-32 text-gray-500">Stock date</dt>
-            <dd>{item.stock_date}</dd>
+            <dd>{item.record.stock_date}</dd>
           </div>
           <div class="flex gap-4">
             <dt class="w-32 text-gray-500">Best before</dt>
-            <dd>{item.best_before_days == null ? "—" : `${item.best_before_days} days`}</dd>
+            <dd>
+              {item.record.best_before_days == null ? "—" : `${item.record.best_before_days} days`}
+            </dd>
           </div>
           {days != null && (
             <div class="flex gap-4">
@@ -67,12 +53,12 @@ export const PantryDetail: FC<{
         </dl>
         <div class="flex gap-3 mb-10">
           <a
-            href={`/pantry/${item.id}/edit`}
+            href={`/pantry/${item.record.id}/edit`}
             class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
           >
             Edit
           </a>
-          <form method="post" action={`/pantry/${item.id}/consume`}>
+          <form method="post" action={`/pantry/${item.record.id}/consume`}>
             <button
               type="submit"
               class="border border-gray-300 px-4 py-2 rounded text-gray-600 hover:bg-gray-50"
@@ -111,7 +97,7 @@ export const PantryDetail: FC<{
                     <td
                       class={`py-2 pr-4 font-medium ${log.delta < 0 ? "text-red-600" : "text-emerald-600"}`}
                     >
-                      {formatDeltaLabel(log.delta, item.unit)}
+                      {item.deltaLabel(log.delta)}
                     </td>
                     <td class="py-2 text-gray-500">{log.note ?? ""}</td>
                   </tr>

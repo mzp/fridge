@@ -1,7 +1,5 @@
 import type { FC } from "hono/jsx";
-import type { meals as mealsTable } from "@/db/schema.js";
-
-type Meal = typeof mealsTable.$inferSelect;
+import { Meal } from "@/model/meal.js";
 
 const MONTH_NAMES = [
   "January",
@@ -63,10 +61,10 @@ const DayCell: FC<{
       <td class={`border border-gray-100 h-16 p-1 align-top${opacity}`}>
         <div class="text-xs text-gray-400 mb-1">{day}</div>
         <a
-          href={`/meals/${meal.id}`}
+          href={meal.detailPath()}
           class="text-xs text-emerald-700 hover:underline leading-tight block"
         >
-          {meal.main_dish}
+          {meal.record.main_dish}
         </a>
       </td>
     );
@@ -85,8 +83,8 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
   year,
   month,
 }) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const mealMap = new Map(meals.map((m) => [m.date, m]));
+  const today = Meal.todayString();
+  const mealMap = new Map(meals.map((m) => [m.record.date, m]));
   const weeks = buildWeeks(year, month);
   const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 

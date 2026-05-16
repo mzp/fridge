@@ -3,6 +3,8 @@ import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { Meal } from "@/model/meal.js";
+import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
 import { MealDetail } from "@/web/views/meals/meal-detail.js";
 import { MealForm } from "@/web/views/meals/meal-form.js";
@@ -22,26 +24,22 @@ export function createApp(db: Db) {
   app.use("/dist.css", serveStatic({ path: "./public/dist.css" }));
 
   app.get("/", (c) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+    const today = Meal.todayString();
+    const twoDaysAgo = Meal.daysBeforeToday(2);
     const mealResults = db
       .select()
       .from(meals)
       .where(gte(meals.date, twoDaysAgo))
       .orderBy(meals.date)
-      .all();
+      .all()
+      .map((item) => new Meal(item));
     const pantryItems = db
       .select()
       .from(pantry)
       .where(eq(pantry.status, "in_stock"))
       .all()
-      .sort((a, b) => {
-        if (a.best_before_days == null) return 1;
-        if (b.best_before_days == null) return -1;
-        const expiryA = new Date(a.stock_date).getTime() + a.best_before_days * 86400000;
-        const expiryB = new Date(b.stock_date).getTime() + b.best_before_days * 86400000;
-        return expiryA - expiryB;
-      });
+      .map((item) => new PantryItem(item))
+      .sort(PantryItem.compareByExpiry);
     const usedIds = new Set(
       db
         .select({ pantry_id: pantryLogs.pantry_id })
@@ -62,7 +60,7 @@ export function createApp(db: Db) {
 
   // Meal calendar
   app.get("/meals", (c) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = Meal.todayString();
     const monthParam = c.req.query("month") ?? today.slice(0, 7);
     const [year, month] = monthParam.split("-").map(Number) as [number, number];
     const from = `${monthParam}-01`;
@@ -72,7 +70,8 @@ export function createApp(db: Db) {
       .from(meals)
       .where(and(gte(meals.date, from), lte(meals.date, to)))
       .orderBy(meals.date)
-      .all();
+      .all()
+      .map((item) => new Meal(item));
     return c.html(
       <Layout>
         <MealsCalendar meals={mealResults} year={year} month={month} />
@@ -127,7 +126,7 @@ export function createApp(db: Db) {
       .innerJoin(pantry, eq(pantryLogs.pantry_id, pantry.id))
       .where(eq(pantryLogs.recorded_at, item.date))
       .all();
-    return c.html(<MealDetail item={item} pantryUsage={pantryUsage} />);
+    return c.html(<MealDetail item={new Meal(item)} pantryUsage={pantryUsage} />);
   });
 
   // Meal edit
@@ -183,7 +182,7 @@ export function createApp(db: Db) {
         unit: body["unit"] ? String(body["unit"]) : null,
         stock_date: String(body["stock_date"]),
         best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
-        category: String(body["category"]) === "prepared" ? "prepared" : "ingredient",
+        category: PantryItem.normalizeCategory(body["category"]),
         status: "in_stock",
       })
       .run();
@@ -215,7 +214,9 @@ export function createApp(db: Db) {
         mealsByDate[m.date] = { id: m.id, main_dish: m.main_dish };
       }
     }
-    return c.html(<PantryDetail item={item} logs={logs} mealsByDate={mealsByDate} />);
+    return c.html(
+      <PantryDetail item={new PantryItem(item)} logs={logs} mealsByDate={mealsByDate} />,
+    );
   });
 
   // Pantry edit
@@ -246,7 +247,7 @@ export function createApp(db: Db) {
         unit: body["unit"] ? String(body["unit"]) : null,
         stock_date: String(body["stock_date"]),
         best_before_days: body["best_before_days"] ? Number(body["best_before_days"]) : null,
-        category: String(body["category"]) === "prepared" ? "prepared" : "ingredient",
+        category: PantryItem.normalizeCategory(body["category"]),
       })
       .where(eq(pantry.id, id))
       .run();

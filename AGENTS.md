@@ -34,6 +34,7 @@ src/
   db/
     schema.ts       Drizzle schema
     index.ts        DB connection
+  model/            Domain model classes and shared business rules
 tests/
   mcp/              MCP tests
   routes/           Web route tests
@@ -94,5 +95,6 @@ MCP runs over stdio transport. Claude Desktop can use:
 ## Development Notes
 
 - Prefer inferred Drizzle types from `src/db/schema.ts`, such as `typeof meals.$inferSelect` and `typeof pantry.$inferInsert`, instead of manually duplicating table-shaped types.
+- Put shared business rules and model behavior, such as pantry expiry calculation, under `src/model/` instead of duplicating them in routes, views, or MCP tools.
 - Keep generated artifacts out of commits unless they are migrations or intentionally tracked assets.
 - Keep `CLAUDE.md`, `AGENTS.md`, and `.agents/workflows/` consistent when project structure or scripts change.

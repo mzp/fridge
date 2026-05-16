@@ -1,8 +1,9 @@
 import type { FC } from "hono/jsx";
-import type { meals, pantry, pantryLogs } from "@/db/schema.js";
+import type { pantry, pantryLogs } from "@/db/schema.js";
+import type { Meal } from "@/model/meal.js";
+import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
 
-type Meal = typeof meals.$inferSelect;
 type PantryUsageEntry = Pick<typeof pantry.$inferSelect, "id" | "name" | "unit"> &
   Pick<typeof pantryLogs.$inferSelect, "delta" | "note">;
 
@@ -15,25 +16,25 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
       <a href="/" class="text-sm text-gray-400 hover:text-gray-600">
         ← Back
       </a>
-      <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.date}</h1>
+      <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.record.date}</h1>
       <dl class="space-y-3 text-sm mb-8">
         <div class="flex gap-4">
           <dt class="w-24 text-gray-500">Main dish</dt>
-          <dd>{item.main_dish}</dd>
+          <dd>{item.record.main_dish}</dd>
         </div>
         <div class="flex gap-4">
           <dt class="w-24 text-gray-500">Side dish</dt>
-          <dd>{item.side_dish ?? "—"}</dd>
+          <dd>{item.sideDishLabel("—")}</dd>
         </div>
       </dl>
       <div class="flex gap-3">
         <a
-          href={`/meals/${item.id}/edit`}
+          href={item.editPath()}
           class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
         >
           Edit
         </a>
-        <form method="post" action={`/meals/${item.id}/delete`}>
+        <form method="post" action={item.deletePath()}>
           <button
             type="submit"
             class="border border-red-300 px-4 py-2 rounded text-red-600 hover:bg-red-50"
@@ -47,9 +48,7 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
           <h2 class="text-sm font-medium text-gray-500 mb-3">Pantry used</h2>
           <ul class="space-y-1 text-sm">
             {pantryUsage.map((entry, i) => {
-              const qty = entry.unit
-                ? `${Math.abs(entry.delta)}${entry.unit}`
-                : String(Math.abs(entry.delta));
+              const qty = PantryItem.formatQuantity(Math.abs(entry.delta), entry.unit);
               return (
                 <li key={i} class="flex gap-2 text-gray-700">
                   <a

@@ -3,10 +3,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { meals } from "@/db/schema.js";
-
-function formatMeal(m: typeof meals.$inferSelect): string {
-  return m.side_dish ? `${m.date}: ${m.main_dish} | ${m.side_dish}` : `${m.date}: ${m.main_dish}`;
-}
+import { Meal } from "@/model/meal.js";
 
 export function registerMealTools(server: McpServer, db: Db) {
   server.tool(
@@ -29,7 +26,7 @@ export function registerMealTools(server: McpServer, db: Db) {
             type: "text",
             text:
               results.length > 0
-                ? results.map(formatMeal).join("\n")
+                ? results.map((meal) => new Meal(meal).summaryLabel()).join("\n")
                 : "No meals found for the specified date range.",
           },
         ],
@@ -55,7 +52,7 @@ export function registerMealTools(server: McpServer, db: Db) {
           .returning()
           .get();
         return {
-          content: [{ type: "text", text: `Updated meal: ${formatMeal(updated)}` }],
+          content: [{ type: "text", text: `Updated meal: ${new Meal(updated).summaryLabel()}` }],
         };
       }
       const inserted = db
@@ -64,7 +61,7 @@ export function registerMealTools(server: McpServer, db: Db) {
         .returning()
         .get();
       return {
-        content: [{ type: "text", text: `Added meal: ${formatMeal(inserted)}` }],
+        content: [{ type: "text", text: `Added meal: ${new Meal(inserted).summaryLabel()}` }],
       };
     },
   );
@@ -81,7 +78,9 @@ export function registerMealTools(server: McpServer, db: Db) {
         return { content: [{ type: "text", text: `No meal found for ${date}.` }] };
       }
       db.delete(meals).where(eq(meals.id, existing.id)).run();
-      return { content: [{ type: "text", text: `Deleted meal: ${formatMeal(existing)}` }] };
+      return {
+        content: [{ type: "text", text: `Deleted meal: ${new Meal(existing).summaryLabel()}` }],
+      };
     },
   );
 }

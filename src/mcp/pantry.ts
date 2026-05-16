@@ -3,24 +3,17 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { pantry, pantryLogs } from "@/db/schema.js";
+import { PantryItem } from "@/model/pantry-item.js";
 
-function daysRemaining(stockDate: string, bestBeforeDays: number): number {
-  const purchased = new Date(stockDate).getTime();
-  const today = new Date().setHours(0, 0, 0, 0);
-  const expiresAt = purchased + bestBeforeDays * 86400000;
-  return Math.ceil((expiresAt - today) / 86400000);
-}
-
-function formatItem(item: typeof pantry.$inferSelect): string {
-  const qty = item.unit ? `${item.quantity}${item.unit}` : String(item.quantity);
-  let line = `[${item.id}] ${item.name} x${qty} (stocked: ${item.stock_date}`;
-  if (item.best_before_days == null) {
+function formatItem(item: PantryItem): string {
+  let line = `[${item.record.id}] ${item.record.name} x${item.quantityLabel()} (stocked: ${item.record.stock_date}`;
+  if (item.record.best_before_days == null) {
     line += ")";
   } else {
-    const days = daysRemaining(item.stock_date, item.best_before_days);
-    line += `, best before: ${item.best_before_days}d)`;
-    if (days < 0) line += " [!] expired";
-    else if (days <= 3) line += " [!] expires soon";
+    line += `, best before: ${item.record.best_before_days}d)`;
+    const status = item.expiryStatus();
+    if (status === "expired") line += " [!] expired";
+    else if (status === "soon") line += " [!] expires soon";
   }
   return line;
 }
@@ -31,12 +24,17 @@ export function registerPantryTools(server: McpServer, db: Db) {
     "Get the list of in-stock pantry items with IDs and expiry warnings",
     {},
     () => {
-      const items = db.select().from(pantry).where(eq(pantry.status, "in_stock")).all();
+      const items = db
+        .select()
+        .from(pantry)
+        .where(eq(pantry.status, "in_stock"))
+        .all()
+        .map((item) => new PantryItem(item));
       if (items.length === 0) {
         return { content: [{ type: "text", text: "No items in stock." }] };
       }
-      const prepared = items.filter((i) => i.category === "prepared");
-      const ingredients = items.filter((i) => i.category !== "prepared");
+      const prepared = items.filter((i) => i.belongsToCategory("prepared"));
+      const ingredients = items.filter((i) => i.belongsToCategory("ingredient"));
       const sections: string[] = [];
       if (prepared.length > 0) sections.push(`[prepared]\n${prepared.map(formatItem).join("\n")}`);
       if (ingredients.length > 0)
@@ -94,7 +92,9 @@ export function registerPantryTools(server: McpServer, db: Db) {
         verb = "Added";
       }
 
-      return { content: [{ type: "text", text: `${verb}: ${formatItem(result)}` }] };
+      return {
+        content: [{ type: "text", text: `${verb}: ${formatItem(new PantryItem(result))}` }],
+      };
     },
   );
 
@@ -123,28 +123,25 @@ export function registerPantryTools(server: McpServer, db: Db) {
         return { content: [{ type: "text", text: `Item #${id} not found.` }] };
       }
 
-      const actualUsed = use_all ? item.quantity : (quantity_used ?? 0);
-      const newQuantity = item.quantity - actualUsed;
-      const newStatus = newQuantity <= 0 ? "consumed" : item.status;
+      const pantryItem = new PantryItem(item);
+      const consumption = pantryItem.consume({ quantityUsed: quantity_used, useAll: use_all });
 
       db.update(pantry)
-        .set({ quantity: newQuantity, status: newStatus })
+        .set({ quantity: consumption.newQuantity, status: consumption.newStatus })
         .where(eq(pantry.id, id))
         .run();
 
       db.insert(pantryLogs)
         .values({
           pantry_id: id,
-          delta: -actualUsed,
+          delta: -consumption.actualUsed,
           recorded_at: date ?? today,
           note: note ?? null,
         })
         .run();
 
-      const qty = item.unit ? `${actualUsed}${item.unit}` : String(actualUsed);
-      const remaining = item.unit ? `${newQuantity}${item.unit}` : String(newQuantity);
-      let msg = `Used ${qty} of ${item.name}. Remaining: ${remaining}.`;
-      if (newQuantity <= 0) msg += " Marked as consumed.";
+      let msg = `Used ${pantryItem.quantityLabel(consumption.actualUsed)} of ${pantryItem.record.name}. Remaining: ${pantryItem.quantityLabel(consumption.newQuantity)}.`;
+      if (consumption.consumed) msg += " Marked as consumed.";
 
       return { content: [{ type: "text", text: msg }] };
     },
