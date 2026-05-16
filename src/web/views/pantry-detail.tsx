@@ -1,8 +1,9 @@
 import type { FC } from "hono/jsx";
-import type { pantry } from "@/db/schema.js";
+import type { pantry, pantryLogs } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 
 type PantryItem = typeof pantry.$inferSelect;
+type PantryLog = typeof pantryLogs.$inferSelect;
 
 function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   const purchased = new Date(purchasedAt).getTime();
@@ -10,7 +11,13 @@ function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   return Math.ceil((purchased + bestBeforeDays * 86400000 - today) / 86400000);
 }
 
-export const PantryDetail: FC<{ item: PantryItem }> = ({ item }) => {
+function formatDeltaLabel(delta: number, unit: string | null): string {
+  const abs = Math.abs(delta);
+  const qty = unit ? `${abs}${unit}` : String(abs);
+  return delta >= 0 ? `+${qty}` : `-${qty}`;
+}
+
+export const PantryDetail: FC<{ item: PantryItem; logs: PantryLog[] }> = ({ item, logs }) => {
   const days =
     item.best_before_days == null ? null : daysRemaining(item.purchased_at, item.best_before_days);
 
@@ -54,7 +61,7 @@ export const PantryDetail: FC<{ item: PantryItem }> = ({ item }) => {
             </div>
           )}
         </dl>
-        <div class="flex gap-3">
+        <div class="flex gap-3 mb-10">
           <a
             href={`/pantry/${item.id}/edit`}
             class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
@@ -70,6 +77,35 @@ export const PantryDetail: FC<{ item: PantryItem }> = ({ item }) => {
             </button>
           </form>
         </div>
+        <section>
+          <h2 class="text-sm font-medium text-gray-500 mb-3">Usage log</h2>
+          {logs.length === 0 ? (
+            <p class="text-sm text-gray-400">No usage logged yet.</p>
+          ) : (
+            <table class="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th class="py-2 pr-4 text-gray-500 font-medium">Date</th>
+                  <th class="py-2 pr-4 text-gray-500 font-medium">Change</th>
+                  <th class="py-2 text-gray-500 font-medium">Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} class="border-b border-gray-100">
+                    <td class="py-2 pr-4 text-gray-600">{log.recorded_at}</td>
+                    <td
+                      class={`py-2 pr-4 font-medium ${log.delta < 0 ? "text-red-600" : "text-emerald-600"}`}
+                    >
+                      {formatDeltaLabel(log.delta, item.unit)}
+                    </td>
+                    <td class="py-2 text-gray-500">{log.note ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
       </main>
     </Layout>
   );

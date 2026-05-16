@@ -64,6 +64,27 @@ describe("GET /pantry/:id", () => {
     const res = await createApp(createTestDb()).request("/pantry/999");
     expect(res.status).toBe(404);
   });
+
+  it("shows 'No usage logged yet.' when no logs exist", async () => {
+    const db = createTestDb();
+    const item = seedItem(db);
+    const res = await createApp(db).request(`/pantry/${item.id}`);
+    const html = await res.text();
+    expect(html).toContain("No usage logged yet.");
+  });
+
+  it("shows usage log entries on the detail page", async () => {
+    const db = createTestDb();
+    const item = seedItem(db);
+    db.insert(schema.pantryLogs)
+      .values({ pantry_id: item.id, delta: -2, recorded_at: "2026-05-15", note: "塩焼き" })
+      .run();
+
+    const res = await createApp(db).request(`/pantry/${item.id}`);
+    const html = await res.text();
+    expect(html).toContain("塩焼き");
+    expect(html).toContain("2026-05-15");
+  });
 });
 
 describe("GET /pantry/:id/edit", () => {

@@ -1,8 +1,8 @@
 import { serveStatic } from "@hono/node-server/serve-static";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
-import { meals, pantry } from "@/db/schema.js";
+import { meals, pantry, pantryLogs } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 import { MealDetail } from "@/web/views/meal-detail.js";
 import { MealForm } from "@/web/views/meal-form.js";
@@ -95,7 +95,18 @@ export function createApp(db: Db) {
       .where(eq(meals.id, Number(c.req.param("id"))))
       .get();
     if (!item) return c.notFound();
-    return c.html(<MealDetail item={item} />);
+    const pantryUsage = db
+      .select({
+        name: pantry.name,
+        delta: pantryLogs.delta,
+        unit: pantry.unit,
+        note: pantryLogs.note,
+      })
+      .from(pantryLogs)
+      .innerJoin(pantry, eq(pantryLogs.pantry_id, pantry.id))
+      .where(eq(pantryLogs.recorded_at, item.date))
+      .all();
+    return c.html(<MealDetail item={item} pantryUsage={pantryUsage} />);
   });
 
   // Meal edit
@@ -114,6 +125,13 @@ export function createApp(db: Db) {
         cancelHref={`/meals/${item.id}`}
       />,
     );
+  });
+
+  app.post("/meals/:id/delete", (c) => {
+    db.delete(meals)
+      .where(eq(meals.id, Number(c.req.param("id"))))
+      .run();
+    return c.redirect("/");
   });
 
   app.post("/meals/:id", async (c) => {
@@ -158,7 +176,13 @@ export function createApp(db: Db) {
       .where(eq(pantry.id, Number(c.req.param("id"))))
       .get();
     if (!item) return c.notFound();
-    return c.html(<PantryDetail item={item} />);
+    const logs = db
+      .select()
+      .from(pantryLogs)
+      .where(eq(pantryLogs.pantry_id, item.id))
+      .orderBy(desc(pantryLogs.recorded_at))
+      .all();
+    return c.html(<PantryDetail item={item} logs={logs} />);
   });
 
   // Pantry edit

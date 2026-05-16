@@ -39,6 +39,22 @@ describe("GET /meals", () => {
   });
 });
 
+describe("POST /meals/:id/delete", () => {
+  it("deletes the meal and redirects to /", async () => {
+    const db = createTestDb();
+    const [meal] = db
+      .insert(schema.meals)
+      .values({ date: "2026-05-15", main_dish: "カレーライス" })
+      .returning()
+      .all();
+
+    const res = await createApp(db).request(`/meals/${meal?.id}/delete`, { method: "POST" });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/");
+    expect(db.select().from(schema.meals).all()).toHaveLength(0);
+  });
+});
+
 describe("GET /", () => {
   it("shows meals from today onwards", async () => {
     const db = createTestDb();

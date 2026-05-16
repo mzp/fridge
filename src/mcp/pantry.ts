@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
-import { pantry } from "@/db/schema.js";
+import { pantry, pantryLogs } from "@/db/schema.js";
 
 function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
   const purchased = new Date(purchasedAt).getTime();
@@ -12,6 +12,7 @@ function daysRemaining(purchasedAt: string, bestBeforeDays: number): number {
 }
 
 function formatItem(item: {
+  id: number;
   name: string;
   quantity: number;
   unit: string | null;
@@ -19,7 +20,7 @@ function formatItem(item: {
   best_before_days: number | null;
 }): string {
   const qty = item.unit ? `${item.quantity}${item.unit}` : String(item.quantity);
-  let line = `${item.name} x${qty} (purchased: ${item.purchased_at}`;
+  let line = `[${item.id}] ${item.name} x${qty} (purchased: ${item.purchased_at}`;
   if (item.best_before_days == null) {
     line += ")";
   } else {
@@ -34,7 +35,7 @@ function formatItem(item: {
 export function registerPantryTools(server: McpServer, db: Db) {
   server.tool(
     "get_pantry",
-    "Get the list of in-stock pantry items with expiry warnings",
+    "Get the list of in-stock pantry items with IDs and expiry warnings",
     {},
     () => {
       const items = db.select().from(pantry).where(eq(pantry.status, "in_stock")).all();
@@ -51,7 +52,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
 
   server.tool(
     "set_pantry_item",
-    "Add or update a pantry item by name. Resets status to in_stock.",
+    "Add or update a pantry item by (name, purchased_at). For recording usage, use use_pantry_item.",
     {
       name: z.string().describe("Item name"),
       quantity: z.number().int().describe("Quantity"),
@@ -60,42 +61,82 @@ export function registerPantryTools(server: McpServer, db: Db) {
       best_before_days: z.number().int().describe("Days until expiry").optional(),
     },
     ({ name, quantity, unit, purchased_at, best_before_days }) => {
-      const existing = db.select().from(pantry).where(eq(pantry.name, name)).get();
+      const existing = db
+        .select()
+        .from(pantry)
+        .where(and(eq(pantry.name, name), eq(pantry.purchased_at, purchased_at)))
+        .get();
+
       const values = {
         name,
         quantity,
         unit: unit ?? null,
         purchased_at,
         best_before_days: best_before_days ?? null,
-        status: "in_stock",
+        status: existing?.status ?? "in_stock",
       };
+
+      let result: typeof pantry.$inferSelect;
+      let verb: string;
+
       if (existing) {
-        const updated = db
-          .update(pantry)
-          .set(values)
-          .where(eq(pantry.id, existing.id))
-          .returning()
-          .get();
-        return { content: [{ type: "text", text: `Updated: ${formatItem(updated)}` }] };
+        result = db.update(pantry).set(values).where(eq(pantry.id, existing.id)).returning().get();
+        verb = "Updated";
+      } else {
+        result = db.insert(pantry).values(values).returning().get();
+        verb = "Added";
       }
-      const inserted = db.insert(pantry).values(values).returning().get();
-      return { content: [{ type: "text", text: `Added: ${formatItem(inserted)}` }] };
+
+      return { content: [{ type: "text", text: `${verb}: ${formatItem(result)}` }] };
     },
   );
 
   server.tool(
-    "consume_pantry_item",
-    "Mark a pantry item as consumed",
+    "use_pantry_item",
+    "Record usage of a pantry item by ID. Decrements quantity and logs the consumption.",
     {
-      name: z.string().describe("Item name"),
+      id: z.number().int().describe("Pantry item ID (from get_pantry)"),
+      quantity_used: z
+        .number()
+        .int()
+        .positive()
+        .describe("Amount used. Omit when use_all is true.")
+        .optional(),
+      use_all: z.boolean().describe("Set to true to use all remaining stock.").optional(),
+      date: z.string().date().describe("Date of use (YYYY-MM-DD, defaults to today)").optional(),
+      note: z.string().describe("Note (e.g. dish name)").optional(),
     },
-    ({ name }) => {
-      const existing = db.select().from(pantry).where(eq(pantry.name, name)).get();
-      if (!existing) {
-        return { content: [{ type: "text", text: `Item "${name}" not found.` }] };
+    ({ id, quantity_used, use_all, date, note }) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const item = db.select().from(pantry).where(eq(pantry.id, id)).get();
+      if (!item) {
+        return { content: [{ type: "text", text: `Item #${id} not found.` }] };
       }
-      db.update(pantry).set({ status: "consumed" }).where(eq(pantry.id, existing.id)).run();
-      return { content: [{ type: "text", text: `Marked as consumed: ${name}` }] };
+
+      const actualUsed = use_all ? item.quantity : (quantity_used ?? 0);
+      const newQuantity = item.quantity - actualUsed;
+      const newStatus = newQuantity <= 0 ? "consumed" : item.status;
+
+      db.update(pantry)
+        .set({ quantity: newQuantity, status: newStatus })
+        .where(eq(pantry.id, id))
+        .run();
+
+      db.insert(pantryLogs)
+        .values({
+          pantry_id: id,
+          delta: -actualUsed,
+          recorded_at: date ?? today,
+          note: note ?? null,
+        })
+        .run();
+
+      const qty = item.unit ? `${actualUsed}${item.unit}` : String(actualUsed);
+      const remaining = item.unit ? `${newQuantity}${item.unit}` : String(newQuantity);
+      let msg = `Used ${qty} of ${item.name}. Remaining: ${remaining}.`;
+      if (newQuantity <= 0) msg += " Marked as consumed.";
+
+      return { content: [{ type: "text", text: msg }] };
     },
   );
 }

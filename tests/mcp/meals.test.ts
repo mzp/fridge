@@ -105,3 +105,39 @@ describe("get_meals", () => {
     expect(result.content).toEqual([{ type: "text", text: "2026-05-15: ビーフカレー | サラダ" }]);
   });
 });
+
+describe("delete_meal", () => {
+  it("deletes a meal and removes it from get_meals", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({
+      name: "set_meal",
+      arguments: { date: "2026-05-15", main_dish: "カレーライス" },
+    });
+    const result = await client.callTool({
+      name: "delete_meal",
+      arguments: { date: "2026-05-15" },
+    });
+    expect(result.content).toEqual([
+      { type: "text", text: "Deleted meal: 2026-05-15: カレーライス" },
+    ]);
+
+    const list = await client.callTool({
+      name: "get_meals",
+      arguments: { from: "2026-05-15", to: "2026-05-15" },
+    });
+    expect(list.content).toEqual([
+      { type: "text", text: "No meals found for the specified date range." },
+    ]);
+  });
+
+  it("returns not found for unknown date", async () => {
+    const client = await createTestClient(createTestDb());
+
+    const result = await client.callTool({
+      name: "delete_meal",
+      arguments: { date: "2026-01-01" },
+    });
+    expect(result.content).toEqual([{ type: "text", text: "No meal found for 2026-01-01." }]);
+  });
+});

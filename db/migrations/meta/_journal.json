@@ -22,6 +22,13 @@
       "when": 1778904930985,
       "tag": "0002_workable_pyro",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1778908463945,
+      "tag": "0003_certain_quasimodo",
+      "breakpoints": true
     }
   ]
 }

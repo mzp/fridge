@@ -35,14 +35,14 @@ describe("set_pantry_item", () => {
       arguments: { name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15" },
     });
     expect(added.content).toEqual([
-      { type: "text", text: "Added: 卵 x6個 (purchased: 2026-05-15)" },
+      { type: "text", text: "Added: [1] 卵 x6個 (purchased: 2026-05-15)" },
     ]);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([{ type: "text", text: "卵 x6個 (purchased: 2026-05-15)" }]);
+    expect(list.content).toEqual([{ type: "text", text: "[1] 卵 x6個 (purchased: 2026-05-15)" }]);
   });
 
-  it("overwrites an existing item", async () => {
+  it("updates an existing item (same name, same purchased_at)", async () => {
     const client = await createTestClient(createTestDb());
 
     await client.callTool({
@@ -54,32 +54,91 @@ describe("set_pantry_item", () => {
       arguments: { name: "牛乳", quantity: 2, purchased_at: "2026-05-15" },
     });
     expect(updated.content).toEqual([
-      { type: "text", text: "Updated: 牛乳 x2 (purchased: 2026-05-15)" },
+      { type: "text", text: "Updated: [1] 牛乳 x2 (purchased: 2026-05-15)" },
     ]);
   });
-});
 
-describe("consume_pantry_item", () => {
-  it("removes item from get_pantry after consuming", async () => {
+  it("treats same name with different purchased_at as separate batches", async () => {
     const client = await createTestClient(createTestDb());
 
     await client.callTool({
       name: "set_pantry_item",
-      arguments: { name: "卵", quantity: 6, purchased_at: "2026-05-15" },
+      arguments: { name: "鮭", quantity: 5, unit: "切れ", purchased_at: "2026-05-10" },
     });
-    await client.callTool({ name: "consume_pantry_item", arguments: { name: "卵" } });
+    await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "鮭", quantity: 3, unit: "切れ", purchased_at: "2026-05-18" },
+    });
+
+    const list = await client.callTool({ name: "get_pantry", arguments: {} });
+    expect(list.content[0]?.text).toContain("鮭 x5切れ (purchased: 2026-05-10)");
+    expect(list.content[0]?.text).toContain("鮭 x3切れ (purchased: 2026-05-18)");
+  });
+});
+
+describe("use_pantry_item", () => {
+  it("decrements quantity and logs usage", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "卵", quantity: 6, unit: "個", purchased_at: "2026-05-15" },
+    });
+    const result = await client.callTool({
+      name: "use_pantry_item",
+      arguments: { id: 1, quantity_used: 2, note: "スクランブルエッグ" },
+    });
+    expect(result.content).toEqual([{ type: "text", text: "Used 2個 of 卵. Remaining: 4個." }]);
+
+    const list = await client.callTool({ name: "get_pantry", arguments: {} });
+    expect(list.content).toEqual([{ type: "text", text: "[1] 卵 x4個 (purchased: 2026-05-15)" }]);
+  });
+
+  it("marks item as consumed when all quantity is used", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "卵", quantity: 2, purchased_at: "2026-05-15" },
+    });
+    const result = await client.callTool({
+      name: "use_pantry_item",
+      arguments: { id: 1, quantity_used: 2 },
+    });
+    expect(result.content).toEqual([
+      { type: "text", text: "Used 2 of 卵. Remaining: 0. Marked as consumed." },
+    ]);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
     expect(list.content).toEqual([{ type: "text", text: "No items in stock." }]);
   });
 
-  it("returns not found for unknown item", async () => {
+  it("uses all remaining stock when use_all is true", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({
+      name: "set_pantry_item",
+      arguments: { name: "牛乳", quantity: 3, unit: "本", purchased_at: "2026-05-15" },
+    });
+    const result = await client.callTool({
+      name: "use_pantry_item",
+      arguments: { id: 1, use_all: true, note: "飲み切り" },
+    });
+    expect(result.content).toEqual([
+      { type: "text", text: "Used 3本 of 牛乳. Remaining: 0本. Marked as consumed." },
+    ]);
+
+    const list = await client.callTool({ name: "get_pantry", arguments: {} });
+    expect(list.content).toEqual([{ type: "text", text: "No items in stock." }]);
+  });
+
+  it("returns not found for unknown ID", async () => {
     const client = await createTestClient(createTestDb());
 
     const result = await client.callTool({
-      name: "consume_pantry_item",
-      arguments: { name: "存在しない食材" },
+      name: "use_pantry_item",
+      arguments: { id: 999, quantity_used: 1 },
     });
-    expect(result.content).toEqual([{ type: "text", text: 'Item "存在しない食材" not found.' }]);
+    expect(result.content).toEqual([{ type: "text", text: "Item #999 not found." }]);
   });
 });

@@ -68,4 +68,20 @@ export function registerMealTools(server: McpServer, db: Db) {
       };
     },
   );
+
+  server.tool(
+    "delete_meal",
+    "Delete a planned meal for a given date.",
+    {
+      date: z.string().date().describe("Date of the meal to delete (YYYY-MM-DD)"),
+    },
+    ({ date }) => {
+      const existing = db.select().from(meals).where(eq(meals.date, date)).get();
+      if (!existing) {
+        return { content: [{ type: "text", text: `No meal found for ${date}.` }] };
+      }
+      db.delete(meals).where(eq(meals.id, existing.id)).run();
+      return { content: [{ type: "text", text: `Deleted meal: ${formatMeal(existing)}` }] };
+    },
+  );
 }

@@ -18,5 +18,15 @@ export const pantry = sqliteTable(
     best_before_days: int(),
     status: text().notNull().default("in_stock"),
   },
-  (t) => [uniqueIndex("pantry_name_idx").on(t.name)],
+  (t) => [uniqueIndex("pantry_name_date_idx").on(t.name, t.purchased_at)],
 );
+
+export const pantryLogs = sqliteTable("pantry_logs", {
+  id: int().primaryKey({ autoIncrement: true }),
+  pantry_id: int()
+    .notNull()
+    .references(() => pantry.id),
+  delta: int().notNull(),
+  recorded_at: text().notNull(),
+  note: text(),
+});
