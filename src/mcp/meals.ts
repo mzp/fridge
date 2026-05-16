@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { and, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "../db/index.js";
 import { meals } from "../db/schema.js";
@@ -29,6 +29,33 @@ export function registerMealTools(server: McpServer, db: Db) {
                 : "No meals found for the specified date range.",
           },
         ],
+      };
+    },
+  );
+
+  server.tool(
+    "set_meal",
+    "Set a planned meal for a given date. If a meal already exists for that date, it will be overwritten.",
+    {
+      date: z.string().date().describe("Date of the meal (YYYY-MM-DD)"),
+      name: z.string().describe("Name of the meal"),
+    },
+    ({ date, name }) => {
+      const existing = db.select().from(meals).where(eq(meals.date, date)).get();
+      if (existing) {
+        const updated = db
+          .update(meals)
+          .set({ name })
+          .where(eq(meals.id, existing.id))
+          .returning()
+          .get();
+        return {
+          content: [{ type: "text", text: `Updated meal: ${updated.date}: ${updated.name}` }],
+        };
+      }
+      const inserted = db.insert(meals).values({ date, name }).returning().get();
+      return {
+        content: [{ type: "text", text: `Added meal: ${inserted.date}: ${inserted.name}` }],
       };
     },
   );

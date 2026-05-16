@@ -3,10 +3,9 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { Db } from "@/db/index.js";
 import * as schema from "@/db/schema.js";
-import { meals } from "@/db/schema.js";
 import { registerMealTools } from "@/mcp/meals.js";
 
 function createTestDb(): Db {
@@ -31,22 +30,13 @@ async function createTestClient(db: Db) {
 }
 
 describe("get_meals", () => {
-  let db: Db;
-  let client: Client;
+  it("returns meals set via set_meal within the date range", async () => {
+    const client = await createTestClient(createTestDb());
 
-  beforeEach(async () => {
-    db = createTestDb();
-    db.insert(meals)
-      .values([
-        { date: "2026-05-15", name: "カレーライス" },
-        { date: "2026-05-16", name: "肉じゃが" },
-        { date: "2026-05-17", name: "鮭の塩焼き" },
-      ])
-      .run();
-    client = await createTestClient(db);
-  });
+    await client.callTool({ name: "set_meal", arguments: { date: "2026-05-15", name: "カレーライス" } });
+    await client.callTool({ name: "set_meal", arguments: { date: "2026-05-16", name: "肉じゃが" } });
+    await client.callTool({ name: "set_meal", arguments: { date: "2026-05-17", name: "鮭の塩焼き" } });
 
-  it("returns meals within the date range", async () => {
     const result = await client.callTool({
       name: "get_meals",
       arguments: { from: "2026-05-15", to: "2026-05-16" },
@@ -61,6 +51,10 @@ describe("get_meals", () => {
   });
 
   it("returns no meals message when range has no meals", async () => {
+    const client = await createTestClient(createTestDb());
+
+    await client.callTool({ name: "set_meal", arguments: { date: "2026-05-15", name: "カレーライス" } });
+
     const result = await client.callTool({
       name: "get_meals",
       arguments: { from: "2026-01-01", to: "2026-01-31" },
@@ -71,6 +65,25 @@ describe("get_meals", () => {
         type: "text",
         text: "No meals found for the specified date range.",
       },
+    ]);
+  });
+
+  it("reflects overwrites made via set_meal", async () => {
+    const client = await createTestClient(createTestDb());
+
+    const added = await client.callTool({ name: "set_meal", arguments: { date: "2026-05-15", name: "カレーライス" } });
+    expect(added.content).toEqual([{ type: "text", text: "Added meal: 2026-05-15: カレーライス" }]);
+
+    const updated = await client.callTool({ name: "set_meal", arguments: { date: "2026-05-15", name: "ビーフカレー" } });
+    expect(updated.content).toEqual([{ type: "text", text: "Updated meal: 2026-05-15: ビーフカレー" }]);
+
+    const result = await client.callTool({
+      name: "get_meals",
+      arguments: { from: "2026-05-15", to: "2026-05-15" },
+    });
+
+    expect(result.content).toEqual([
+      { type: "text", text: "2026-05-15: ビーフカレー" },
     ]);
   });
 });
