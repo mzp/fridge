@@ -48,16 +48,19 @@ function buildWeeks(year: number, month: number): (number | null)[][] {
   return weeks;
 }
 
-const DayCell: FC<{ day: number; month: number; year: number; meal: Meal | undefined }> = ({
-  day,
-  month,
-  year,
-  meal,
-}) => {
+const DayCell: FC<{
+  day: number;
+  month: number;
+  year: number;
+  meal: Meal | undefined;
+  today: string;
+}> = ({ day, month, year, meal, today }) => {
   const dateStr = `${year}-${pad(month)}-${pad(day)}`;
+  const past = dateStr < today;
+  const opacity = past ? " opacity-40" : "";
   if (meal) {
     return (
-      <td class="border border-gray-100 h-16 p-1 align-top">
+      <td class={`border border-gray-100 h-16 p-1 align-top${opacity}`}>
         <div class="text-xs text-gray-400 mb-1">{day}</div>
         <a
           href={`/meals/${meal.id}`}
@@ -69,7 +72,7 @@ const DayCell: FC<{ day: number; month: number; year: number; meal: Meal | undef
     );
   }
   return (
-    <td class="border border-gray-100 h-16 p-1 align-top">
+    <td class={`border border-gray-100 h-16 p-1 align-top${opacity}`}>
       <a href={`/meals/new?date=${dateStr}`} class="block w-full h-full hover:bg-gray-50">
         <div class="text-xs text-gray-400">{day}</div>
       </a>
@@ -82,6 +85,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
   year,
   month,
 }) => {
+  const today = new Date().toISOString().slice(0, 10);
   const mealMap = new Map(meals.map((m) => [m.date, m]));
   const weeks = buildWeeks(year, month);
   const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
@@ -137,6 +141,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
                     month={month}
                     year={year}
                     meal={mealMap.get(`${year}-${pad(month)}-${pad(day)}`)}
+                    today={today}
                   />
                 ),
               )}
