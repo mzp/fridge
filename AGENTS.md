@@ -4,10 +4,10 @@ For the human-facing quick start (commands, log tailing) see [`README.md`](./REA
 
 ## Overview
 
-Fridge is a meal planning system with an MCP server and an SSR web UI.
+Fridge is a meal planning system with an MCP server and an web UI.
 
 - Chat agent: plan meals, generate shopping lists, and save recipes through MCP.
-- Web UI: view the meal calendar, inspect recipes, and manage the shopping list.
+- Web UI: view the meal calendar, inspect partry.
 
 ## Tech Stack
 

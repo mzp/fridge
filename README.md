@@ -1,5 +1,7 @@
 # Fridge
 
+![](/docs/images/claude_desktop.png)
+
 Personal meal planning system. MCP server lets a chat agent plan meals and manage the pantry; the SSR web UI (Hono) shows the meal calendar and pantry/shopping list.
 
 Project conventions, tech stack, and agent workflows live in [`AGENTS.md`](./AGENTS.md).
