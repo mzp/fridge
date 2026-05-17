@@ -6,5 +6,6 @@ export default defineConfig({
   },
   test: {
     globalSetup: ["./tests/helpers/setup-logs.ts"],
+    exclude: ["**/node_modules/**", "**/dist/**", "tests/e2e/**"],
   },
 });

@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run css:build && npm run db:migrate && tsx src/web/index.tsx",
+    "start:dev": "npm run css:build && npm run db:migrate && tsx src/web/index.tsx",
     "mcp": "tsx src/mcp/index.ts",
     "css:build": "npx @tailwindcss/cli -i public/style.css -o public/dist.css",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
-    "test": "vitest run",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "start:e2e": "npm run css:build && tsx --env-file=.env.test scripts/start-e2e.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate-meal-format": "tsx scripts/migrate-meal-format.ts"
@@ -21,6 +25,7 @@
   "type": "module",
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
+    "@playwright/test": "^1.60.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.8.0",
     "drizzle-kit": "^0.31.10",

@@ -22,14 +22,14 @@ Node.js is pinned via [Volta](https://volta.sh/) — all commands go through `vo
 ```bash
 volta run npm install
 volta run npm run db:migrate   # apply migrations once
-volta run npm run dev          # web server: http://localhost:3000
+volta run npm run start:dev    # web server: http://localhost:3000
 volta run npm run mcp          # MCP server over stdio
 volta run npm run test         # tests
 ```
 
 ## Watching logs
 
-Structured JSONL logs land under `logs/` (gitignored). `npm run dev` already pretty-prints web logs to stdout. To tail the files yourself, pipe through `pino-pretty` with `-S` to keep each entry on one line:
+Structured JSONL logs land under `logs/` (gitignored). `npm run start:dev` already pretty-prints web logs to stdout. To tail the files yourself, pipe through `pino-pretty` with `-S` to keep each entry on one line:
 
 ```bash
 tail -f logs/web.jsonl | npx pino-pretty -S
