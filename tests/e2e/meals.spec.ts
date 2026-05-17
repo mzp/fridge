@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FUTURE_DATE, resetDb } from "@test/e2e/fixtures/test-db.js";
+import { FUTURE_DATE, resetDb } from "@test/helpers/e2e.js";
 
 test.beforeEach(async () => {
   await resetDb();

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetDb } from "@test/e2e/fixtures/test-db.js";
+import { resetDb } from "@test/helpers/e2e.js";
 
 test.beforeEach(async () => {
   await resetDb();
