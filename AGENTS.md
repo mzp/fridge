@@ -41,6 +41,7 @@ src/
 tests/
   mcp/              MCP tests
   routes/           Web route tests
+  e2e/              Playwright E2E tests
 public/             Static assets
 docs/               Architecture docs and ADRs
 db/migrations/      Drizzle migrations, committed to git
@@ -48,8 +49,8 @@ db/migrations/      Drizzle migrations, committed to git
 
 ## Environment
 
-- `.env`: local development, SQLite database under `db/`.
-- `.env.test`: tests, SQLite in memory.
+- `.env`: local development (`npm run start:dev`). SQLite database `db/fridge.db`.
+- `.env.test`: automated tests. `DATABASE_PATH=:memory:`. Vitest helpers also hardcode `:memory:` for direct DB construction. Playwright (`npm run start:e2e`) reads this file via `tsx --env-file`, so the E2E server runs against an in-process in-memory SQLite. The `/__test__/reset` endpoint (enabled only when `NODE_ENV=test`) lets specs clear it between tests.
 - Production currently uses the same `DATABASE_PATH`-based SQLite configuration.
 
 SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
@@ -59,8 +60,10 @@ SQLite database files under `db/*.db` are generated and gitignored. Migration SQ
 Run all npm commands through `volta run` so the Node.js version from `package.json` is used.
 
 ```bash
-volta run npm run dev          # Build CSS, run migrations, then start the dev server
-volta run npm run test         # Run tests
+volta run npm run start:dev    # Build CSS, run migrations, then start the dev server (manual use only)
+volta run npm run test         # Run all tests (unit + E2E)
+volta run npm run test:unit    # Vitest only
+volta run npm run test:e2e     # Playwright E2E only
 volta run npm run typecheck    # Type check
 volta run npm run lint         # Lint
 volta run npm run format       # Format
@@ -69,7 +72,9 @@ volta run npm run db:generate  # Generate migrations
 volta run npm run db:migrate   # Run migrations
 ```
 
-`public/dist.css` is generated and gitignored. Build it before starting the server; `npm run dev` already handles this.
+> `npm run start:dev` is **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke it — it reads `.env` and writes to `db/fridge.db`. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and `db/test.db`.
+
+`public/dist.css` is generated and gitignored. Build it before starting the server; `npm run start:dev` already handles this.
 
 ## Agent Workflows
 
@@ -106,7 +111,7 @@ MCP runs over stdio transport. Claude Desktop can use:
 
 Pino-based structured logs are written under `logs/` (gitignored).
 
-- `logs/web.jsonl` — every HTTP request handled by the web server. POST/PUT/PATCH/DELETE bodies are included. `npm run dev` also prints the same lines to stdout in pretty format so you can watch traffic live.
+- `logs/web.jsonl` — every HTTP request handled by the web server. POST/PUT/PATCH/DELETE bodies are included. `npm run start:dev` also prints the same lines to stdout in pretty format so you can watch traffic live.
 - `logs/mcp.jsonl` — every MCP tool invocation (tool name, params, output summary, duration; stack trace on error). MCP runs over stdio, so logs go to file only.
 - `logs/{web,mcp}-test.jsonl` — logs from the test run. `tests/helpers/setup-logs.ts` wipes `logs/*-test.jsonl` at the start of every `npm run test` so each run is fresh.
 

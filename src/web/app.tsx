@@ -1,6 +1,7 @@
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
+import { meals, pantry, pantryLogs } from "@/db/schema.js";
 import { requestLogger } from "@/web/middleware/logger.js";
 import { createHomeRoutes } from "@/web/routes/home.js";
 import { createMealRoutes } from "@/web/routes/meals.js";
@@ -14,6 +15,15 @@ export function createApp(db: Db) {
   app.route("/", createHomeRoutes(db));
   app.route("/meals", createMealRoutes(db));
   app.route("/pantry", createPantryRoutes(db));
+
+  if (process.env["NODE_ENV"] === "test") {
+    app.post("/__test__/reset", (c) => {
+      db.delete(pantryLogs).run();
+      db.delete(meals).run();
+      db.delete(pantry).run();
+      return c.body(null, 204);
+    });
+  }
 
   return app;
 }
