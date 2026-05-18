@@ -56,7 +56,7 @@ export const PantryDetail: FC<{
             Edit
           </a>
           <form method="post" action={`/pantry/${item.record.id}/consume`}>
-            <button type="submit" class="btn btn-md btn-outline">
+            <button type="submit" class="btn btn-md btn-secondary">
               Mark as consumed
             </button>
           </form>

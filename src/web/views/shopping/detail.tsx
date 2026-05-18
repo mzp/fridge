@@ -20,7 +20,7 @@ export const ShoppingDetail: FC<{ item: PantryItem }> = ({ item }) => (
           Edit
         </a>
         <form method="post" action={`/shopping/${item.record.id}/purchase`}>
-          <button type="submit" class="btn btn-md btn-outline">
+          <button type="submit" class="btn btn-md btn-secondary">
             Purchase
           </button>
         </form>

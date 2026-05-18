@@ -100,7 +100,7 @@ export const PantryForm: FC<{
           <button type="submit" class="btn btn-md btn-primary">
             Save
           </button>
-          <a href={cancelHref} class="btn btn-md btn-secondary">
+          <a href={cancelHref} class="btn btn-md btn-cancel">
             Cancel
           </a>
         </div>
