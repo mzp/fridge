@@ -29,6 +29,10 @@ export function createHomeRoutes(db: Db) {
       .all()
       .map((item) => new PantryItem(item))
       .sort(PantryItem.compareByExpiry);
+    const urgentIngredients = pantryItems.filter((item) => {
+      const days = item.daysRemaining();
+      return item.belongsToCategory("ingredient") && days != null && days <= 3;
+    });
     const shoppingItems = db
       .select()
       .from(pantry)
@@ -48,7 +52,7 @@ export function createHomeRoutes(db: Db) {
         <main class="page-wide space-y-10">
           <MealsList meals={mealResults} today={today} />
           <PantryList category="prepared" items={pantryItems} usedIds={usedIds} />
-          <PantryList category="ingredient" items={pantryItems} usedIds={usedIds} />
+          <PantryList category="ingredient" items={urgentIngredients} usedIds={usedIds} />
           <ShoppingSummary items={shoppingItems} />
         </main>
       </Layout>,

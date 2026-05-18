@@ -52,11 +52,11 @@ export const PantryDetail: FC<{
           )}
         </dl>
         <div class="flex gap-3 mb-10">
-          <a href={`/pantry/${item.record.id}/edit`} class="btn-primary">
+          <a href={`/pantry/${item.record.id}/edit`} class="btn btn-md btn-primary">
             Edit
           </a>
           <form method="post" action={`/pantry/${item.record.id}/consume`}>
-            <button type="submit" class="btn-outline">
+            <button type="submit" class="btn btn-md btn-outline">
               Mark as consumed
             </button>
           </form>
@@ -65,7 +65,7 @@ export const PantryDetail: FC<{
             action={`/pantry/${item.record.id}/delete`}
             onsubmit={`return confirm('Delete ${item.record.name}?')`}
           >
-            <button type="submit" class="btn-danger">
+            <button type="submit" class="btn btn-md btn-danger">
               Delete
             </button>
           </form>
@@ -75,18 +75,18 @@ export const PantryDetail: FC<{
           {logs.length === 0 ? (
             <p class="text-sm text-gray-400">No usage logged yet.</p>
           ) : (
-            <table class="w-full text-left text-sm border-collapse">
+            <table class="data-table text-sm">
               <thead>
-                <tr class="border-b border-gray-200">
-                  <th class="py-2 pr-4 text-gray-500 font-medium">Date</th>
-                  <th class="py-2 pr-4 text-gray-500 font-medium">Change</th>
-                  <th class="py-2 text-gray-500 font-medium">Note</th>
+                <tr class="data-table-head">
+                  <th class="data-table-heading">Date</th>
+                  <th class="data-table-heading">Change</th>
+                  <th class="data-table-heading">Note</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} class="border-b border-gray-100">
-                    <td class="py-2 pr-4 text-gray-600">
+                  <tr key={log.id} class="data-table-row">
+                    <td class="data-table-cell text-gray-600">
                       {log.recorded_at}
                       {mealsByDate[log.recorded_at] != null && (
                         <a
@@ -98,11 +98,11 @@ export const PantryDetail: FC<{
                       )}
                     </td>
                     <td
-                      class={`py-2 pr-4 font-medium ${log.delta < 0 ? "text-red-600" : "text-emerald-600"}`}
+                      class={`data-table-cell font-medium ${log.delta < 0 ? "text-red-600" : "text-emerald-600"}`}
                     >
                       {item.deltaLabel(log.delta)}
                     </td>
-                    <td class="py-2 text-gray-500">{log.note ?? ""}</td>
+                    <td class="data-table-cell text-gray-500">{log.note ?? ""}</td>
                   </tr>
                 ))}
               </tbody>

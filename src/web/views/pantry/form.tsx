@@ -97,10 +97,10 @@ export const PantryForm: FC<{
           </select>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn-primary">
+          <button type="submit" class="btn btn-md btn-primary">
             Save
           </button>
-          <a href={cancelHref} class="btn-secondary">
+          <a href={cancelHref} class="btn btn-md btn-secondary">
             Cancel
           </a>
         </div>

@@ -32,18 +32,28 @@ describe("GET /", () => {
     expect(html).not.toContain("過去の料理");
   });
 
-  it("shows shopping-list rows in the Shopping list section, pantry rows in pantry sections", async () => {
+  it("shows shopping-list rows, all prepared dishes, and only urgent ingredients", async () => {
     const db = createTestDb();
+    const today = new Date();
+    const todayString = today.toISOString().slice(0, 10);
+    const weekAgo = new Date(today.getTime() - 7 * 86400000).toISOString().slice(0, 10);
     db.insert(schema.pantry)
       .values([
         { name: "りんご", quantity: 3, stock_date: null },
-        { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
+        { name: "作り置き", quantity: 1, stock_date: weekAgo, category: "prepared" },
+        { name: "期限切れの牛乳", quantity: 1, stock_date: weekAgo, best_before_days: 3 },
+        { name: "卵", quantity: 6, unit: "個", stock_date: todayString, best_before_days: 2 },
+        { name: "米", quantity: 5, unit: "kg", stock_date: todayString, best_before_days: 30 },
       ])
       .run();
 
     const html = await (await createHomeApp(db).request("/")).text();
+    expect(html).toContain("Prepared dishes");
+    expect(html).toContain("作り置き");
+    expect(html).toContain("期限切れの牛乳");
+    expect(html).toContain("卵");
     expect(html).toContain("Shopping list");
     expect(html).toContain("りんご");
-    expect(html).toContain("卵");
+    expect(html).not.toContain("米");
   });
 });

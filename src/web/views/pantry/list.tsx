@@ -2,9 +2,9 @@ import type { FC } from "hono/jsx";
 import type { PantryCategory, PantryItem } from "@/model/pantry-item.js";
 
 function rowClass(days: number | null): string {
-  if (days != null && days < 0) return "border-b border-gray-100 bg-red-50";
-  if (days != null && days <= 3) return "border-b border-gray-100 bg-yellow-50";
-  return "border-b border-gray-100";
+  if (days != null && days < 0) return "data-table-row bg-red-50";
+  if (days != null && days <= 3) return "data-table-row bg-yellow-50";
+  return "data-table-row";
 }
 
 function daysLabel(days: number | null): string {
@@ -49,13 +49,13 @@ const PantryRow: FC<{ item: PantryItem; used: boolean }> = ({ item, used }) => {
 };
 
 const PantryTable: FC<{ items: PantryItem[]; usedIds: Set<number> }> = ({ items, usedIds }) => (
-  <table class="w-full text-left border-collapse">
+  <table class="data-table">
     <thead>
-      <tr class="border-b border-gray-200">
-        <th class="py-2 pr-4 text-gray-500 font-medium">Item</th>
-        <th class="py-2 pr-4 text-gray-500 font-medium">Qty</th>
-        <th class="py-2 pr-4 text-gray-500 font-medium">Stocked</th>
-        <th class="py-2 text-gray-500 font-medium">Expires in</th>
+      <tr class="data-table-head">
+        <th class="data-table-heading">Item</th>
+        <th class="data-table-heading">Qty</th>
+        <th class="data-table-heading">Stocked</th>
+        <th class="data-table-heading">Expires in</th>
       </tr>
     </thead>
     <tbody>

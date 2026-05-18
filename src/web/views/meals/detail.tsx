@@ -28,11 +28,11 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
         </div>
       </dl>
       <div class="flex gap-3">
-        <a href={item.editPath()} class="btn-primary">
+        <a href={item.editPath()} class="btn btn-md btn-primary">
           Edit
         </a>
         <form method="post" action={item.deletePath()}>
-          <button type="submit" class="btn-danger">
+          <button type="submit" class="btn btn-md btn-danger">
             Delete
           </button>
         </form>

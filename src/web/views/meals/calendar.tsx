@@ -106,7 +106,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
         </a>
       </div>
       <div class="flex justify-end mb-4">
-        <a href="/meals/new" class="btn-primary-sm">
+        <a href="/meals/new" class="btn btn-sm btn-primary">
           Add meal
         </a>
       </div>

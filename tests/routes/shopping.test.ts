@@ -36,6 +36,49 @@ describe("GET /shopping", () => {
   });
 });
 
+describe("GET /shopping/:id", () => {
+  it("shows a shopping item detail with actions", async () => {
+    const db = createTestDb();
+    const item = seedShoppingItem(db, "豆腐", 2, "丁");
+    const html = await (await createShoppingApp(db).request(`/shopping/${item.id}`)).text();
+    expect(html).toContain("豆腐");
+    expect(html).toContain("2丁");
+    expect(html).toContain(`/shopping/${item.id}/edit`);
+    expect(html).toContain(`/shopping/${item.id}/purchase`);
+    expect(html).toContain(`/shopping/${item.id}/delete`);
+  });
+
+  it("returns 404 for pantry items", async () => {
+    const db = createTestDb();
+    const item = db
+      .insert(schema.pantry)
+      .values({ name: "卵", quantity: 4, stock_date: "2026-05-10" })
+      .returning()
+      .get();
+    const res = await createShoppingApp(db).request(`/shopping/${item.id}`);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /shopping/:id", () => {
+  it("updates a shopping item and redirects to the detail", async () => {
+    const db = createTestDb();
+    const item = seedShoppingItem(db, "玉ねぎ", 1, "袋");
+    const body = new URLSearchParams({ name: "玉ねぎ", quantity: "2", unit: "個" });
+    const res = await createShoppingApp(db).request(`/shopping/${item.id}`, {
+      method: "POST",
+      body,
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(`/shopping/${item.id}`);
+
+    const updated = db.select().from(schema.pantry).all()[0];
+    expect(updated?.quantity).toBe(2);
+    expect(updated?.unit).toBe("個");
+  });
+});
+
 describe("POST /shopping", () => {
   it("creates a shopping item with null stock_date", async () => {
     const db = createTestDb();

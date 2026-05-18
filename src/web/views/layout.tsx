@@ -17,6 +17,9 @@ export const Layout: FC = ({ children }) => (
           <a href="/meals" class="text-sm text-gray-600 hover:text-emerald-600">
             Meals
           </a>
+          <a href="/pantry" class="text-sm text-gray-600 hover:text-emerald-600">
+            Pantry
+          </a>
           <a href="/shopping" class="text-sm text-gray-600 hover:text-emerald-600">
             Shopping
           </a>

@@ -9,12 +9,12 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
     {meals.length === 0 ? (
       <p class="muted-text">No meals planned.</p>
     ) : (
-      <table class="w-full text-left border-collapse">
+      <table class="data-table">
         <thead>
-          <tr class="border-b border-gray-200">
-            <th class="py-2 pr-4 text-gray-500 font-medium">Date</th>
-            <th class="py-2 pr-4 text-gray-500 font-medium">Main</th>
-            <th class="py-2 text-gray-500 font-medium">Side</th>
+          <tr class="data-table-head">
+            <th class="data-table-heading">Date</th>
+            <th class="data-table-heading">Main</th>
+            <th class="data-table-heading">Side</th>
           </tr>
         </thead>
         <tbody>
@@ -23,7 +23,7 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
             const href = m.detailPath();
             const linkClass = "block py-2 hover:text-emerald-600";
             return (
-              <tr key={m.record.id} class={`border-b border-gray-100 ${past ? "opacity-40" : ""}`}>
+              <tr key={m.record.id} class={`data-table-row ${past ? "opacity-40" : ""}`}>
                 <td class="pr-4 text-gray-600">
                   <a href={href} class={linkClass}>
                     {m.record.date}

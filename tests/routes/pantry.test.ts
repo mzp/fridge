@@ -27,6 +27,25 @@ describe("GET /pantry/new", () => {
   });
 });
 
+describe("GET /pantry", () => {
+  it("shows pantry lists and excludes shopping-list items", async () => {
+    const db = createTestDb();
+    db.insert(schema.pantry)
+      .values([
+        { name: "作り置き", quantity: 1, stock_date: "2026-05-15", category: "prepared" },
+        { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
+        { name: "りんご", quantity: 3, stock_date: null },
+      ])
+      .run();
+
+    const html = await (await createPantryApp(db).request("/pantry")).text();
+    expect(html).toContain("Pantry");
+    expect(html).toContain("作り置き");
+    expect(html).toContain("卵");
+    expect(html).not.toContain("りんご");
+  });
+});
+
 describe("GET /pantry/:id", () => {
   it("shows the detail page", async () => {
     const db = createTestDb();
