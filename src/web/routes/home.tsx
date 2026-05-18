@@ -47,9 +47,9 @@ export function createHomeRoutes(db: Db) {
       <Layout>
         <main class="max-w-2xl mx-auto px-4 py-8 space-y-10">
           <MealsList meals={mealResults} today={today} />
-          <ShoppingSummary items={shoppingItems} />
           <PantryList category="prepared" items={pantryItems} usedIds={usedIds} />
           <PantryList category="ingredient" items={pantryItems} usedIds={usedIds} />
+          <ShoppingSummary items={shoppingItems} />
         </main>
       </Layout>,
     );

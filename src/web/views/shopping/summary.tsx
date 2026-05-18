@@ -12,16 +12,22 @@ export const ShoppingSummary: FC<{ items: PantryItem[] }> = ({ items }) => (
     {items.length === 0 ? (
       <p class="text-gray-500">Shopping list is empty.</p>
     ) : (
-      <ul class="divide-y divide-gray-200 bg-white rounded border border-gray-200">
-        {items.map((item) => (
-          <li key={item.record.id} class="flex items-center gap-3 px-4 py-3">
-            <div class="flex-1">
-              <div class="font-medium">{item.record.name}</div>
-              <div class="text-sm text-gray-500">{item.quantityLabel()}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="py-2 pr-4 text-gray-500 font-medium">Item</th>
+            <th class="py-2 text-gray-500 font-medium">Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.record.id} class="border-b border-gray-100">
+              <td class="pr-4 py-2">{item.record.name}</td>
+              <td class="py-2 text-gray-600">{item.quantityLabel()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     )}
   </section>
 );
