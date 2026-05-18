@@ -34,6 +34,7 @@ src/
     index.ts        MCP server entrypoint
     meals.ts        Meal tools
     pantry.ts       Pantry tools
+    shopping.ts     Shopping list tools
   db/
     schema.ts       Drizzle schema
     index.ts        DB connection

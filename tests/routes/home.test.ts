@@ -31,4 +31,19 @@ describe("GET /", () => {
     expect(html).toContain("肉じゃが");
     expect(html).not.toContain("過去の料理");
   });
+
+  it("shows shopping-list rows in the Shopping list section, pantry rows in pantry sections", async () => {
+    const db = createTestDb();
+    db.insert(schema.pantry)
+      .values([
+        { name: "りんご", quantity: 3, stock_date: null },
+        { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
+      ])
+      .run();
+
+    const html = await (await createHomeApp(db).request("/")).text();
+    expect(html).toContain("Shopping list");
+    expect(html).toContain("りんご");
+    expect(html).toContain("卵");
+  });
 });

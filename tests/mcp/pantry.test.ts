@@ -1,6 +1,7 @@
 import { createTestDb } from "@test/helpers/db.js";
 import { createTestClient } from "@test/helpers/mcp.js";
 import { describe, expect, it } from "vitest";
+import * as schema from "@/db/schema.js";
 import { registerPantryTools } from "@/mcp/pantry.js";
 
 describe("set_pantry_item", () => {
@@ -35,6 +36,22 @@ describe("set_pantry_item", () => {
     expect(updated.content).toEqual([
       { type: "text", text: "Updated: [1] 牛乳 x2 (stocked: 2026-05-15)" },
     ]);
+  });
+
+  it("excludes shopping-list entries (stock_date is null) from get_pantry", async () => {
+    const db = createTestDb();
+    db.insert(schema.pantry)
+      .values([
+        { name: "りんご", quantity: 3, stock_date: null },
+        { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
+      ])
+      .run();
+    const client = await createTestClient(db, registerPantryTools);
+
+    const list = await client.callTool({ name: "get_pantry", arguments: {} });
+    const text = (list.content as Array<{ text: string }>)[0]?.text ?? "";
+    expect(text).toContain("卵 x6個");
+    expect(text).not.toContain("りんご");
   });
 
   it("treats same name with different stock_date as separate batches", async () => {

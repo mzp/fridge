@@ -43,6 +43,13 @@
       "when": 1778943709054,
       "tag": "0005_pale_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1779080553469,
+      "tag": "0006_nosy_marvex",
+      "breakpoints": true
     }
   ]
 }
