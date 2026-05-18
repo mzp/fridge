@@ -11,11 +11,11 @@ export const MealForm: FC<{ item?: Meal; action: string; title: string; cancelHr
   cancelHref,
 }) => (
   <Layout>
-    <main class="max-w-lg mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-emerald-600 mb-6">{title}</h1>
+    <main class="page">
+      <h1 class="page-title">{title}</h1>
       <form method="post" action={action} class="space-y-4">
         <div>
-          <label for="date" class="block text-sm text-gray-500 mb-1">
+          <label for="date" class="form-label">
             Date
           </label>
           <input
@@ -24,11 +24,11 @@ export const MealForm: FC<{ item?: Meal; action: string; title: string; cancelHr
             name="date"
             value={item?.date ?? ""}
             required
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div>
-          <label for="main_dish" class="block text-sm text-gray-500 mb-1">
+          <label for="main_dish" class="form-label">
             Main dish
           </label>
           <input
@@ -37,11 +37,11 @@ export const MealForm: FC<{ item?: Meal; action: string; title: string; cancelHr
             name="main_dish"
             value={item?.main_dish ?? ""}
             required
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div>
-          <label for="side_dish" class="block text-sm text-gray-500 mb-1">
+          <label for="side_dish" class="form-label">
             Side dish
           </label>
           <input
@@ -50,17 +50,14 @@ export const MealForm: FC<{ item?: Meal; action: string; title: string; cancelHr
             name="side_dish"
             value={item?.side_dish ?? ""}
             placeholder="optional"
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
-        <div class="flex gap-3 pt-2">
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-          >
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
             Save
           </button>
-          <a href={cancelHref} class="px-4 py-2 text-gray-500 hover:text-gray-700">
+          <a href={cancelHref} class="btn-secondary">
             Cancel
           </a>
         </div>

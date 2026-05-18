@@ -11,11 +11,11 @@ export const PantryForm: FC<{
   cancelHref: string;
 }> = ({ item, action, title, cancelHref }) => (
   <Layout>
-    <main class="max-w-lg mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-emerald-600 mb-6">{title}</h1>
+    <main class="page">
+      <h1 class="page-title">{title}</h1>
       <form method="post" action={action} class="space-y-4">
         <div>
-          <label for="name" class="block text-sm text-gray-500 mb-1">
+          <label for="name" class="form-label">
             Name
           </label>
           <input
@@ -24,12 +24,12 @@ export const PantryForm: FC<{
             name="name"
             value={item?.name ?? ""}
             required
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div class="flex gap-3">
           <div class="flex-1">
-            <label for="quantity" class="block text-sm text-gray-500 mb-1">
+            <label for="quantity" class="form-label">
               Quantity
             </label>
             <input
@@ -39,11 +39,11 @@ export const PantryForm: FC<{
               value={item?.quantity ?? ""}
               required
               min="0"
-              class="w-full border border-gray-300 rounded px-3 py-2"
+              class="form-control"
             />
           </div>
           <div class="flex-1">
-            <label for="unit" class="block text-sm text-gray-500 mb-1">
+            <label for="unit" class="form-label">
               Unit
             </label>
             <input
@@ -52,12 +52,12 @@ export const PantryForm: FC<{
               name="unit"
               value={item?.unit ?? ""}
               placeholder="個, ml, g …"
-              class="w-full border border-gray-300 rounded px-3 py-2"
+              class="form-control"
             />
           </div>
         </div>
         <div>
-          <label for="stock_date" class="block text-sm text-gray-500 mb-1">
+          <label for="stock_date" class="form-label">
             Stock date
           </label>
           <input
@@ -66,11 +66,11 @@ export const PantryForm: FC<{
             name="stock_date"
             value={item?.stock_date ?? ""}
             required
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div>
-          <label for="best_before_days" class="block text-sm text-gray-500 mb-1">
+          <label for="best_before_days" class="form-label">
             Best before (days)
           </label>
           <input
@@ -80,18 +80,14 @@ export const PantryForm: FC<{
             value={item?.best_before_days ?? ""}
             min="1"
             placeholder="leave blank if unknown"
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div>
-          <label for="category" class="block text-sm text-gray-500 mb-1">
+          <label for="category" class="form-label">
             Category
           </label>
-          <select
-            id="category"
-            name="category"
-            class="w-full border border-gray-300 rounded px-3 py-2 bg-white"
-          >
+          <select id="category" name="category" class="form-control bg-white">
             <option value="ingredient" selected={item?.category !== "prepared"}>
               Ingredient
             </option>
@@ -100,14 +96,11 @@ export const PantryForm: FC<{
             </option>
           </select>
         </div>
-        <div class="flex gap-3 pt-2">
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-          >
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
             Save
           </button>
-          <a href={cancelHref} class="px-4 py-2 text-gray-500 hover:text-gray-700">
+          <a href={cancelHref} class="btn-secondary">
             Cancel
           </a>
         </div>

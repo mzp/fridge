@@ -1,1 +1,91 @@
 @import "tailwindcss";
+
+@layer components {
+  .page {
+    @apply max-w-lg mx-auto px-4 py-8;
+  }
+
+  .page-wide {
+    @apply max-w-2xl mx-auto px-4 py-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-emerald-600 mb-6;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-emerald-600;
+  }
+
+  .subsection-title {
+    @apply text-sm font-medium text-gray-500 mb-3;
+  }
+
+  .muted-text {
+    @apply text-gray-500;
+  }
+
+  .back-link {
+    @apply text-sm text-gray-400 hover:text-gray-600;
+  }
+
+  .form-label {
+    @apply block text-sm text-gray-500 mb-1;
+  }
+
+  .form-control {
+    @apply w-full border border-gray-300 rounded px-3 py-2;
+  }
+
+  .form-actions {
+    @apply flex gap-3 pt-2;
+  }
+
+  .btn-primary {
+    @apply bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700;
+  }
+
+  .btn-primary-sm {
+    @apply text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 text-gray-500 hover:text-gray-700;
+  }
+
+  .btn-outline {
+    @apply border border-gray-300 px-4 py-2 rounded text-gray-600 hover:bg-gray-50;
+  }
+
+  .btn-danger {
+    @apply border border-red-300 px-4 py-2 rounded text-red-600 hover:bg-red-50;
+  }
+
+  .detail-list {
+    @apply space-y-3 text-sm mb-8;
+  }
+
+  .detail-row {
+    @apply flex gap-4;
+  }
+
+  .detail-label {
+    @apply text-gray-500;
+  }
+
+  .calendar-table {
+    @apply w-full table-fixed border-collapse;
+  }
+
+  .calendar-weekday {
+    @apply text-center text-xs text-gray-500 font-medium py-2 border-b border-gray-200;
+  }
+
+  .calendar-cell {
+    @apply border border-gray-100 h-16 p-1 align-top;
+  }
+
+  .calendar-empty-cell {
+    @apply border border-gray-100 h-16 p-1 bg-gray-50;
+  }
+}

@@ -12,40 +12,34 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
   pantryUsage,
 }) => (
   <Layout>
-    <main class="max-w-lg mx-auto px-4 py-8">
-      <a href="/" class="text-sm text-gray-400 hover:text-gray-600">
+    <main class="page">
+      <a href="/" class="back-link">
         ← Back
       </a>
-      <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.record.date}</h1>
-      <dl class="space-y-3 text-sm mb-8">
-        <div class="flex gap-4">
-          <dt class="w-24 text-gray-500">Main dish</dt>
+      <h1 class="page-title mt-2">{item.record.date}</h1>
+      <dl class="detail-list">
+        <div class="detail-row">
+          <dt class="detail-label w-24">Main dish</dt>
           <dd>{item.record.main_dish}</dd>
         </div>
-        <div class="flex gap-4">
-          <dt class="w-24 text-gray-500">Side dish</dt>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Side dish</dt>
           <dd>{item.sideDishLabel("—")}</dd>
         </div>
       </dl>
       <div class="flex gap-3">
-        <a
-          href={item.editPath()}
-          class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-        >
+        <a href={item.editPath()} class="btn-primary">
           Edit
         </a>
         <form method="post" action={item.deletePath()}>
-          <button
-            type="submit"
-            class="border border-red-300 px-4 py-2 rounded text-red-600 hover:bg-red-50"
-          >
+          <button type="submit" class="btn-danger">
             Delete
           </button>
         </form>
       </div>
       {pantryUsage.length > 0 && (
         <section class="mt-10">
-          <h2 class="text-sm font-medium text-gray-500 mb-3">Pantry used</h2>
+          <h2 class="subsection-title">Pantry used</h2>
           <ul class="space-y-1 text-sm">
             {pantryUsage.map((entry, i) => {
               const qty = PantryItem.formatQuantity(Math.abs(entry.delta), entry.unit);

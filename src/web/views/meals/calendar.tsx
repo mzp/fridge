@@ -58,7 +58,7 @@ const DayCell: FC<{
   const opacity = past ? " opacity-40" : "";
   if (meal) {
     return (
-      <td class={`border border-gray-100 h-16 p-1 align-top${opacity}`}>
+      <td class={`calendar-cell${opacity}`}>
         <div class="text-xs text-gray-400 mb-1">{day}</div>
         <a
           href={meal.detailPath()}
@@ -70,7 +70,7 @@ const DayCell: FC<{
     );
   }
   return (
-    <td class={`border border-gray-100 h-16 p-1 align-top${opacity}`}>
+    <td class={`calendar-cell${opacity}`}>
       <a href={`/meals/new?date=${dateStr}`} class="block w-full h-full hover:bg-gray-50">
         <div class="text-xs text-gray-400">{day}</div>
       </a>
@@ -89,7 +89,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
   const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
   return (
-    <main class="max-w-2xl mx-auto px-4 py-8">
+    <main class="page-wide">
       <div class="flex items-center justify-between mb-4">
         <a
           href={`/meals?month=${prevMonthParam(year, month)}`}
@@ -97,7 +97,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
         >
           ←
         </a>
-        <h1 class="text-xl font-bold text-emerald-600">{monthLabel}</h1>
+        <h1 class="section-title">{monthLabel}</h1>
         <a
           href={`/meals?month=${nextMonthParam(year, month)}`}
           class="text-gray-500 hover:text-emerald-600 px-2"
@@ -106,14 +106,11 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
         </a>
       </div>
       <div class="flex justify-end mb-4">
-        <a
-          href="/meals/new"
-          class="text-sm bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700"
-        >
+        <a href="/meals/new" class="btn-primary-sm">
           Add meal
         </a>
       </div>
-      <table class="w-full table-fixed border-collapse">
+      <table class="calendar-table">
         <colgroup>
           {DAY_NAMES.map((d) => (
             <col key={d} class="w-[14.285714%]" />
@@ -122,10 +119,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
         <thead>
           <tr>
             {DAY_NAMES.map((d) => (
-              <th
-                key={d}
-                class="text-center text-xs text-gray-500 font-medium py-2 border-b border-gray-200"
-              >
+              <th key={d} class="calendar-weekday">
                 {d}
               </th>
             ))}
@@ -136,7 +130,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
             <tr key={wi}>
               {week.map((day, di) =>
                 day === null ? (
-                  <td key={di} class="border border-gray-100 h-16 p-1 bg-gray-50" />
+                  <td key={di} class="calendar-empty-cell" />
                 ) : (
                   <DayCell
                     key={di}

@@ -76,9 +76,9 @@ export const PantryList: FC<{
 
   return (
     <section>
-      <h2 class="text-xl font-bold text-emerald-600 mb-4">{title}</h2>
+      <h2 class="section-title mb-4">{title}</h2>
       {filtered.length === 0 ? (
-        <p class="text-gray-500">No items.</p>
+        <p class="muted-text">No items.</p>
       ) : (
         <PantryTable items={filtered} usedIds={usedIds} />
       )}

@@ -14,29 +14,29 @@ export const PantryDetail: FC<{
 
   return (
     <Layout>
-      <main class="max-w-lg mx-auto px-4 py-8">
-        <a href="/" class="text-sm text-gray-400 hover:text-gray-600">
+      <main class="page">
+        <a href="/" class="back-link">
           ← Back
         </a>
-        <h1 class="text-2xl font-bold text-emerald-600 mt-2 mb-6">{item.record.name}</h1>
-        <dl class="space-y-3 text-sm mb-8">
-          <div class="flex gap-4">
-            <dt class="w-32 text-gray-500">Quantity</dt>
+        <h1 class="page-title mt-2">{item.record.name}</h1>
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt class="detail-label w-32">Quantity</dt>
             <dd>{item.quantityLabel()}</dd>
           </div>
-          <div class="flex gap-4">
-            <dt class="w-32 text-gray-500">Stock date</dt>
+          <div class="detail-row">
+            <dt class="detail-label w-32">Stock date</dt>
             <dd>{item.record.stock_date}</dd>
           </div>
-          <div class="flex gap-4">
-            <dt class="w-32 text-gray-500">Best before</dt>
+          <div class="detail-row">
+            <dt class="detail-label w-32">Best before</dt>
             <dd>
               {item.record.best_before_days == null ? "—" : `${item.record.best_before_days} days`}
             </dd>
           </div>
           {days != null && (
-            <div class="flex gap-4">
-              <dt class="w-32 text-gray-500">Expires in</dt>
+            <div class="detail-row">
+              <dt class="detail-label w-32">Expires in</dt>
               <dd
                 class={
                   days < 0
@@ -52,17 +52,11 @@ export const PantryDetail: FC<{
           )}
         </dl>
         <div class="flex gap-3 mb-10">
-          <a
-            href={`/pantry/${item.record.id}/edit`}
-            class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-          >
+          <a href={`/pantry/${item.record.id}/edit`} class="btn-primary">
             Edit
           </a>
           <form method="post" action={`/pantry/${item.record.id}/consume`}>
-            <button
-              type="submit"
-              class="border border-gray-300 px-4 py-2 rounded text-gray-600 hover:bg-gray-50"
-            >
+            <button type="submit" class="btn-outline">
               Mark as consumed
             </button>
           </form>
@@ -71,16 +65,13 @@ export const PantryDetail: FC<{
             action={`/pantry/${item.record.id}/delete`}
             onsubmit={`return confirm('Delete ${item.record.name}?')`}
           >
-            <button
-              type="submit"
-              class="border border-red-300 px-4 py-2 rounded text-red-600 hover:bg-red-50"
-            >
+            <button type="submit" class="btn-danger">
               Delete
             </button>
           </form>
         </div>
         <section>
-          <h2 class="text-sm font-medium text-gray-500 mb-3">Usage log</h2>
+          <h2 class="subsection-title">Usage log</h2>
           {logs.length === 0 ? (
             <p class="text-sm text-gray-400">No usage logged yet.</p>
           ) : (
