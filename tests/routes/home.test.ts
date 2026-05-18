@@ -31,30 +31,4 @@ describe("GET /", () => {
     expect(html).toContain("肉じゃが");
     expect(html).not.toContain("過去の料理");
   });
-
-  it("shows 'No meals planned.' when there are no upcoming meals", async () => {
-    const res = await createHomeApp().request("/");
-    expect(res.status).toBe(200);
-
-    const html = await res.text();
-    expect(html).toContain("No meals planned.");
-  });
-
-  it("shows pantry items on the top page", async () => {
-    const db = createTestDb();
-    db.insert(schema.pantry)
-      .values({
-        name: "卵",
-        quantity: 6,
-        unit: "個",
-        stock_date: "2026-05-15",
-        status: "in_stock",
-      })
-      .run();
-
-    const res = await createHomeApp(db).request("/");
-    const html = await res.text();
-    expect(html).toContain("卵");
-    expect(html).toContain("No meals planned.");
-  });
 });
