@@ -16,7 +16,7 @@
     "test:e2e:ui": "playwright test --ui",
     "start:e2e": "npm run css:build && tsx --env-file=.env.test scripts/start-e2e.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate-meal-format": "tsx scripts/migrate-meal-format.ts"
   },
   "keywords": [],
