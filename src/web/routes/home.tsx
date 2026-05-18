@@ -1,4 +1,4 @@
-import { eq, gte } from "drizzle-orm";
+import { and, eq, gte, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
@@ -24,7 +24,7 @@ export function createHomeRoutes(db: Db) {
     const pantryItems = db
       .select()
       .from(pantry)
-      .where(eq(pantry.status, "in_stock"))
+      .where(and(eq(pantry.status, "in_stock"), isNotNull(pantry.stock_date)))
       .all()
       .map((item) => new PantryItem(item))
       .sort(PantryItem.compareByExpiry);

@@ -18,6 +18,7 @@ export class PantryItem {
   constructor(readonly record: PantryItemRecord) {}
 
   expiresAt(): number | null {
+    if (this.record.stock_date == null) return null;
     if (this.record.best_before_days == null) return null;
     return new Date(this.record.stock_date).getTime() + this.record.best_before_days * MS_PER_DAY;
   }

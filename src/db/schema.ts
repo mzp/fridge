@@ -14,7 +14,7 @@ export const pantry = sqliteTable(
     name: text().notNull(),
     quantity: int().notNull(),
     unit: text(),
-    stock_date: text().notNull(),
+    stock_date: text(),
     best_before_days: int(),
     status: text().notNull().default("in_stock"),
     category: text().notNull().default("ingredient"),

@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { pantry, pantryLogs } from "@/db/schema.js";
@@ -29,7 +29,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
       const items = db
         .select()
         .from(pantry)
-        .where(eq(pantry.status, "in_stock"))
+        .where(and(eq(pantry.status, "in_stock"), isNotNull(pantry.stock_date)))
         .all()
         .map((item) => new PantryItem(item));
       if (items.length === 0) {

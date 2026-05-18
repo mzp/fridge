@@ -6,6 +6,7 @@ import { requestLogger } from "@/web/middleware/logger.js";
 import { createHomeRoutes } from "@/web/routes/home.js";
 import { createMealRoutes } from "@/web/routes/meals.js";
 import { createPantryRoutes } from "@/web/routes/pantry.js";
+import { createShoppingRoutes } from "@/web/routes/shopping.js";
 
 export function createApp(db: Db) {
   const app = new Hono();
@@ -15,6 +16,7 @@ export function createApp(db: Db) {
   app.route("/", createHomeRoutes(db));
   app.route("/meals", createMealRoutes(db));
   app.route("/pantry", createPantryRoutes(db));
+  app.route("/shopping", createShoppingRoutes(db));
 
   if (process.env["NODE_ENV"] === "test") {
     app.post("/__test__/reset", (c) => {
