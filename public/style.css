@@ -1,1 +1,127 @@
 @import "tailwindcss";
+
+@layer components {
+  .page {
+    @apply max-w-lg mx-auto px-4 py-8;
+  }
+
+  .page-wide {
+    @apply max-w-2xl mx-auto px-4 py-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-emerald-600 mb-6;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-emerald-600;
+  }
+
+  .subsection-title {
+    @apply text-sm font-medium text-gray-500 mb-3;
+  }
+
+  .muted-text {
+    @apply text-gray-500;
+  }
+
+  .is-past {
+    @apply opacity-40;
+  }
+
+  .back-link {
+    @apply text-sm text-gray-400 hover:text-gray-600;
+  }
+
+  .form-label {
+    @apply block text-sm text-gray-500 mb-1;
+  }
+
+  .form-control {
+    @apply w-full border border-gray-300 rounded px-3 py-2;
+  }
+
+  .form-actions {
+    @apply flex gap-3 pt-2;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded border font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2;
+  }
+
+  .btn-md {
+    @apply px-4 py-2;
+  }
+
+  .btn-primary {
+    @apply border-emerald-600 bg-emerald-600 text-white hover:border-emerald-700 hover:bg-emerald-700 focus-visible:outline-emerald-600;
+  }
+
+  .btn-secondary {
+    @apply border-gray-300 text-gray-600 hover:bg-gray-100 focus-visible:outline-gray-400;
+  }
+
+  .btn-cancel {
+    @apply border-transparent text-gray-500 hover:text-gray-700 focus-visible:outline-gray-400;
+  }
+
+  .btn-danger {
+    @apply border-red-300 text-red-600 hover:bg-red-50 focus-visible:outline-red-500;
+  }
+
+  .detail-list {
+    @apply space-y-3 text-sm mb-8;
+  }
+
+  .detail-row {
+    @apply flex gap-4;
+  }
+
+  .detail-label {
+    @apply text-gray-500;
+  }
+
+  .data-table {
+    @apply w-full text-left border-collapse;
+  }
+
+  .data-table-head {
+    @apply border-b border-gray-200;
+  }
+
+  .data-table-row {
+    @apply border-b border-gray-100;
+  }
+
+  .data-table-heading {
+    @apply py-2 pr-4 text-gray-500 font-medium;
+  }
+
+  .data-table-heading:last-child {
+    @apply pr-0;
+  }
+
+  .data-table-cell {
+    @apply py-2 pr-4;
+  }
+
+  .data-table-cell:last-child {
+    @apply pr-0;
+  }
+
+  .calendar-table {
+    @apply w-full table-fixed border-collapse;
+  }
+
+  .calendar-weekday {
+    @apply text-center text-xs text-gray-500 font-medium py-2 border-b border-gray-200;
+  }
+
+  .calendar-cell {
+    @apply border border-gray-100 h-16 p-1 align-top;
+  }
+
+  .calendar-empty-cell {
+    @apply border border-gray-100 h-16 p-1 bg-gray-50;
+  }
+}

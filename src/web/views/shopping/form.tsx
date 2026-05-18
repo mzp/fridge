@@ -9,13 +9,14 @@ export const ShoppingForm: FC<{
   action: string;
   title: string;
   submitLabel: string;
-}> = ({ item, action, title, submitLabel }) => (
+  cancelHref: string;
+}> = ({ item, action, title, submitLabel, cancelHref }) => (
   <Layout>
-    <main class="max-w-lg mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-emerald-600 mb-6">{title}</h1>
+    <main class="page">
+      <h1 class="page-title">{title}</h1>
       <form method="post" action={action} class="space-y-4">
         <div>
-          <label for="name" class="block text-sm text-gray-500 mb-1">
+          <label for="name" class="form-label">
             Name
           </label>
           <input
@@ -24,12 +25,12 @@ export const ShoppingForm: FC<{
             name="name"
             value={item?.name ?? ""}
             required
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            class="form-control"
           />
         </div>
         <div class="flex gap-3">
           <div class="flex-1">
-            <label for="quantity" class="block text-sm text-gray-500 mb-1">
+            <label for="quantity" class="form-label">
               Quantity
             </label>
             <input
@@ -39,11 +40,11 @@ export const ShoppingForm: FC<{
               value={item?.quantity ?? 1}
               required
               min="1"
-              class="w-full border border-gray-300 rounded px-3 py-2"
+              class="form-control"
             />
           </div>
           <div class="flex-1">
-            <label for="unit" class="block text-sm text-gray-500 mb-1">
+            <label for="unit" class="form-label">
               Unit
             </label>
             <input
@@ -52,18 +53,15 @@ export const ShoppingForm: FC<{
               name="unit"
               value={item?.unit ?? ""}
               placeholder="個, ml, g …"
-              class="w-full border border-gray-300 rounded px-3 py-2"
+              class="form-control"
             />
           </div>
         </div>
-        <div class="flex gap-3 pt-2">
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
-          >
+        <div class="form-actions">
+          <button type="submit" class="btn btn-md btn-primary">
             {submitLabel}
           </button>
-          <a href="/shopping" class="px-4 py-2 text-gray-500 hover:text-gray-700">
+          <a href={cancelHref} class="btn btn-md btn-cancel">
             Cancel
           </a>
         </div>

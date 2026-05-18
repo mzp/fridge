@@ -5,6 +5,7 @@ import { pantry } from "@/db/schema.js";
 import { logger } from "@/logger/web.js";
 import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
+import { ShoppingDetail } from "@/web/views/shopping/detail.js";
 import { ShoppingForm } from "@/web/views/shopping/form.js";
 import { ShoppingList } from "@/web/views/shopping/list.js";
 
@@ -21,7 +22,7 @@ export function createShoppingRoutes(db: Db) {
       .map((item) => new PantryItem(item));
     return c.html(
       <Layout>
-        <main class="max-w-2xl mx-auto px-4 py-8">
+        <main class="page-wide">
           <ShoppingList items={items} />
         </main>
       </Layout>,
@@ -29,8 +30,26 @@ export function createShoppingRoutes(db: Db) {
   });
 
   app.get("/new", (c) =>
-    c.html(<ShoppingForm action="/shopping" title="Add to shopping list" submitLabel="Add" />),
+    c.html(
+      <ShoppingForm
+        action="/shopping"
+        title="Add to shopping list"
+        submitLabel="Add"
+        cancelHref="/shopping"
+      />,
+    ),
   );
+
+  app.get("/:id", (c) => {
+    const id = Number(c.req.param("id"));
+    const item = db
+      .select()
+      .from(pantry)
+      .where(and(eq(pantry.id, id), isNull(pantry.stock_date)))
+      .get();
+    if (!item) return c.notFound();
+    return c.html(<ShoppingDetail item={new PantryItem(item)} />);
+  });
 
   app.get("/:id/edit", (c) => {
     const id = Number(c.req.param("id"));
@@ -46,6 +65,7 @@ export function createShoppingRoutes(db: Db) {
         title={`Edit: ${item.name}`}
         item={item}
         submitLabel="Save"
+        cancelHref={`/shopping/${id}`}
       />,
     );
   });
@@ -66,7 +86,7 @@ export function createShoppingRoutes(db: Db) {
 
     db.update(pantry).set({ name, quantity, unit }).where(eq(pantry.id, id)).run();
     logger.info({ id, name, quantity, unit }, "shopping_updated");
-    return c.redirect("/shopping");
+    return c.redirect(`/shopping/${id}`);
   });
 
   app.post("/", async (c) => {

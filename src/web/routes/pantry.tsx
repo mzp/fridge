@@ -1,16 +1,51 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
 import { logger } from "@/logger/web.js";
 import { PantryItem } from "@/model/pantry-item.js";
+import { Layout } from "@/web/views/layout.js";
 import { PantryDetail } from "@/web/views/pantry/detail.js";
 import { PantryForm } from "@/web/views/pantry/form.js";
+import { PantryList } from "@/web/views/pantry/list.js";
 
 export function createPantryRoutes(db: Db) {
   const app = new Hono();
 
-  app.get("/new", (c) => c.html(<PantryForm action="/pantry" title="Add item" cancelHref="/" />));
+  app.get("/", (c) => {
+    const pantryItems = db
+      .select()
+      .from(pantry)
+      .where(and(eq(pantry.status, "in_stock"), isNotNull(pantry.stock_date)))
+      .all()
+      .map((item) => new PantryItem(item))
+      .sort(PantryItem.compareByExpiry);
+    const usedIds = new Set(
+      db
+        .select({ pantry_id: pantryLogs.pantry_id })
+        .from(pantryLogs)
+        .all()
+        .map((r) => r.pantry_id),
+    );
+    return c.html(
+      <Layout>
+        <main class="page-wide space-y-10">
+          <div class="flex items-center justify-between">
+            <h1 class="page-title mb-0">Pantry</h1>
+            <a href="/pantry/new" class="btn btn-md btn-primary">
+              Add item
+            </a>
+          </div>
+          <PantryList category="prepared" items={pantryItems} usedIds={usedIds} />
+          <PantryList category="ingredient" items={pantryItems} usedIds={usedIds} />
+        </main>
+      </Layout>,
+    );
+  });
+
+  app.get("/new", (c) =>
+    c.html(<PantryForm action="/pantry" title="Add item" cancelHref="/pantry" />),
+  );
 
   app.post("/", async (c) => {
     const body = await c.req.parseBody();
