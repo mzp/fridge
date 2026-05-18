@@ -25,6 +25,10 @@
     @apply text-gray-500;
   }
 
+  .is-past {
+    @apply opacity-40;
+  }
+
   .back-link {
     @apply text-sm text-gray-400 hover:text-gray-600;
   }

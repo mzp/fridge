@@ -55,10 +55,10 @@ const DayCell: FC<{
 }> = ({ day, month, year, meal, today }) => {
   const dateStr = `${year}-${pad(month)}-${pad(day)}`;
   const past = dateStr < today;
-  const opacity = past ? " opacity-40" : "";
+  const stateClass = past ? " is-past" : "";
   if (meal) {
     return (
-      <td class={`calendar-cell${opacity}`}>
+      <td class={`calendar-cell${stateClass}`}>
         <div class="text-xs text-gray-400 mb-1">{day}</div>
         <a
           href={meal.detailPath()}
@@ -70,7 +70,7 @@ const DayCell: FC<{
     );
   }
   return (
-    <td class={`calendar-cell${opacity}`}>
+    <td class={`calendar-cell${stateClass}`}>
       <a href={`/meals/new?date=${dateStr}`} class="block w-full h-full hover:bg-gray-50">
         <div class="text-xs text-gray-400">{day}</div>
       </a>

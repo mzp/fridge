@@ -23,7 +23,7 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
             const href = m.detailPath();
             const linkClass = "block py-2 hover:text-emerald-600";
             return (
-              <tr key={m.record.id} class={`data-table-row ${past ? "opacity-40" : ""}`}>
+              <tr key={m.record.id} class={`data-table-row ${past ? "is-past" : ""}`}>
                 <td class="pr-4 text-gray-600">
                   <a href={href} class={linkClass}>
                     {m.record.date}
