@@ -5,7 +5,7 @@ export const ShoppingList: FC<{ items: PantryItem[] }> = ({ items }) => (
   <section>
     <div class="flex items-center justify-between mb-4">
       <h2 class="section-title">Shopping list</h2>
-      <a href="/shopping/new" class="btn btn-sm-tall btn-primary">
+      <a href="/shopping/new" class="btn btn-md btn-primary">
         + Add item
       </a>
     </div>

@@ -32,7 +32,7 @@ export function createPantryRoutes(db: Db) {
         <main class="page-wide space-y-10">
           <div class="flex items-center justify-between">
             <h1 class="page-title mb-0">Pantry</h1>
-            <a href="/pantry/new" class="btn btn-sm-tall btn-primary">
+            <a href="/pantry/new" class="btn btn-md btn-primary">
               Add item
             </a>
           </div>
