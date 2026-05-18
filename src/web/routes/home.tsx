@@ -1,4 +1,4 @@
-import { and, eq, gte, isNotNull } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
@@ -7,6 +7,7 @@ import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
 import { MealsList } from "@/web/views/meals/list.js";
 import { PantryList } from "@/web/views/pantry/list.js";
+import { ShoppingSummary } from "@/web/views/shopping/summary.js";
 
 export function createHomeRoutes(db: Db) {
   const app = new Hono();
@@ -28,6 +29,13 @@ export function createHomeRoutes(db: Db) {
       .all()
       .map((item) => new PantryItem(item))
       .sort(PantryItem.compareByExpiry);
+    const shoppingItems = db
+      .select()
+      .from(pantry)
+      .where(and(isNull(pantry.stock_date), eq(pantry.status, "in_stock")))
+      .orderBy(pantry.id)
+      .all()
+      .map((item) => new PantryItem(item));
     const usedIds = new Set(
       db
         .select({ pantry_id: pantryLogs.pantry_id })
@@ -39,6 +47,7 @@ export function createHomeRoutes(db: Db) {
       <Layout>
         <main class="max-w-2xl mx-auto px-4 py-8 space-y-10">
           <MealsList meals={mealResults} today={today} />
+          <ShoppingSummary items={shoppingItems} />
           <PantryList category="prepared" items={pantryItems} usedIds={usedIds} />
           <PantryList category="ingredient" items={pantryItems} usedIds={usedIds} />
         </main>

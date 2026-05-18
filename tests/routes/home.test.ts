@@ -32,7 +32,7 @@ describe("GET /", () => {
     expect(html).not.toContain("過去の料理");
   });
 
-  it("excludes shopping-list pantry rows (stock_date is null)", async () => {
+  it("shows shopping-list rows in the Shopping list section, pantry rows in pantry sections", async () => {
     const db = createTestDb();
     db.insert(schema.pantry)
       .values([
@@ -42,7 +42,8 @@ describe("GET /", () => {
       .run();
 
     const html = await (await createHomeApp(db).request("/")).text();
+    expect(html).toContain("Shopping list");
+    expect(html).toContain("りんご");
     expect(html).toContain("卵");
-    expect(html).not.toContain("りんご");
   });
 });

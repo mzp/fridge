@@ -4,6 +4,7 @@ import type { Db } from "@/db/index.js";
 import { pantry } from "@/db/schema.js";
 import { logger } from "@/logger/web.js";
 import { PantryItem } from "@/model/pantry-item.js";
+import { Layout } from "@/web/views/layout.js";
 import { ShoppingForm } from "@/web/views/shopping/form.js";
 import { ShoppingList } from "@/web/views/shopping/list.js";
 
@@ -18,7 +19,13 @@ export function createShoppingRoutes(db: Db) {
       .orderBy(pantry.id)
       .all()
       .map((item) => new PantryItem(item));
-    return c.html(<ShoppingList items={items} />);
+    return c.html(
+      <Layout>
+        <main class="max-w-2xl mx-auto px-4 py-8">
+          <ShoppingList items={items} />
+        </main>
+      </Layout>,
+    );
   });
 
   app.get("/new", (c) =>
