@@ -24,6 +24,12 @@ export const ShoppingList: FC<{ items: PantryItem[] }> = ({ items }) => (
                 <div class="font-medium">{item.record.name}</div>
                 <div class="text-sm text-gray-500">{item.quantityLabel()}</div>
               </div>
+              <a
+                href={`/shopping/${item.record.id}/edit`}
+                class="border border-gray-300 text-gray-600 px-3 py-1 rounded hover:bg-gray-100 text-sm"
+              >
+                Edit
+              </a>
               <form method="post" action={`/shopping/${item.record.id}/purchase`}>
                 <button
                   type="submit"

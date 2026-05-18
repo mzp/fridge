@@ -54,10 +54,10 @@ describe("POST /shopping", () => {
     expect(rows[0]?.quantity).toBe(2);
   });
 
-  it("increases quantity when the same name already exists", async () => {
+  it("overwrites quantity and unit when the same name already exists", async () => {
     const db = createTestDb();
-    seedShoppingItem(db, "りんご", 2);
-    const body = new URLSearchParams({ name: "りんご", quantity: "3" });
+    seedShoppingItem(db, "玉ねぎ", 1, "袋");
+    const body = new URLSearchParams({ name: "玉ねぎ", quantity: "3", unit: "個" });
     await createShoppingApp(db).request("/shopping", {
       method: "POST",
       body,
@@ -65,7 +65,8 @@ describe("POST /shopping", () => {
     });
     const rows = db.select().from(schema.pantry).all();
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.quantity).toBe(5);
+    expect(rows[0]?.quantity).toBe(3);
+    expect(rows[0]?.unit).toBe("個");
   });
 });
 

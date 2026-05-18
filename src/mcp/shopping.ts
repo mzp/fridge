@@ -43,11 +43,14 @@ export function registerShoppingTools(server: McpServer, db: Db) {
   loggedTool(
     server,
     "add_shopping_item",
-    "Add an item to the shopping list. If the same name already exists on the list, its quantity is increased.",
+    "Add or update a shopping list item by name. If the same name already exists, its quantity and unit are overwritten with the supplied values.",
     {
-      name: z.string().describe("Item name"),
-      quantity: z.number().int().positive().describe("Quantity to add"),
-      unit: z.string().describe("Unit (e.g. 個, ml, g)").optional(),
+      name: z.string().describe("Item name (key)"),
+      quantity: z.number().int().positive().describe("Final desired quantity"),
+      unit: z
+        .string()
+        .describe("Unit (e.g. 個, ml, g). Overwrites existing unit when supplied.")
+        .optional(),
     },
     ({ name, quantity, unit }) => {
       const existing = db
@@ -60,14 +63,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
       let verb: string;
 
       if (existing) {
-        const newQuantity = existing.quantity + quantity;
         result = db
           .update(pantry)
-          .set({ quantity: newQuantity, unit: unit ?? existing.unit })
+          .set({ quantity, unit: unit ?? existing.unit })
           .where(eq(pantry.id, existing.id))
           .returning()
           .get();
-        verb = "Increased";
+        verb = "Updated";
       } else {
         result = db
           .insert(pantry)

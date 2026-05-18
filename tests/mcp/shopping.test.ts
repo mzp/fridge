@@ -51,18 +51,18 @@ describe("add_shopping_item", () => {
     expect(rows[0]?.stock_date).toBeNull();
   });
 
-  it("increases quantity when the same name already exists on the list", async () => {
+  it("overwrites quantity and unit when the same name already exists on the list", async () => {
     const db = createTestDb();
     const client = await createTestClient(db, registerShoppingTools);
     await client.callTool({
       name: "add_shopping_item",
-      arguments: { name: "りんご", quantity: 2 },
+      arguments: { name: "玉ねぎ", quantity: 1, unit: "袋" },
     });
     const res = await client.callTool({
       name: "add_shopping_item",
-      arguments: { name: "りんご", quantity: 3 },
+      arguments: { name: "玉ねぎ", quantity: 1, unit: "個" },
     });
-    expect(res.content).toEqual([{ type: "text", text: "Increased: [1] りんご x5" }]);
+    expect(res.content).toEqual([{ type: "text", text: "Updated: [1] 玉ねぎ x1個" }]);
   });
 });
 

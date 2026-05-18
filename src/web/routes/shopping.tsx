@@ -21,7 +21,46 @@ export function createShoppingRoutes(db: Db) {
     return c.html(<ShoppingList items={items} />);
   });
 
-  app.get("/new", (c) => c.html(<ShoppingForm />));
+  app.get("/new", (c) =>
+    c.html(<ShoppingForm action="/shopping" title="Add to shopping list" submitLabel="Add" />),
+  );
+
+  app.get("/:id/edit", (c) => {
+    const id = Number(c.req.param("id"));
+    const item = db
+      .select()
+      .from(pantry)
+      .where(and(eq(pantry.id, id), isNull(pantry.stock_date)))
+      .get();
+    if (!item) return c.notFound();
+    return c.html(
+      <ShoppingForm
+        action={`/shopping/${id}`}
+        title={`Edit: ${item.name}`}
+        item={item}
+        submitLabel="Save"
+      />,
+    );
+  });
+
+  app.post("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const existing = db
+      .select()
+      .from(pantry)
+      .where(and(eq(pantry.id, id), isNull(pantry.stock_date)))
+      .get();
+    if (!existing) return c.notFound();
+
+    const body = await c.req.parseBody();
+    const name = String(body["name"]).trim();
+    const quantity = Number(body["quantity"]);
+    const unit = body["unit"] ? String(body["unit"]) : null;
+
+    db.update(pantry).set({ name, quantity, unit }).where(eq(pantry.id, id)).run();
+    logger.info({ id, name, quantity, unit }, "shopping_updated");
+    return c.redirect("/shopping");
+  });
 
   app.post("/", async (c) => {
     const body = await c.req.parseBody();
@@ -37,10 +76,10 @@ export function createShoppingRoutes(db: Db) {
 
     if (existing) {
       db.update(pantry)
-        .set({ quantity: existing.quantity + quantity, unit: unit ?? existing.unit })
+        .set({ quantity, unit: unit ?? existing.unit })
         .where(eq(pantry.id, existing.id))
         .run();
-      logger.info({ id: existing.id, name, added: quantity }, "shopping_increased");
+      logger.info({ id: existing.id, name, quantity }, "shopping_overwritten");
     } else {
       const inserted = db
         .insert(pantry)

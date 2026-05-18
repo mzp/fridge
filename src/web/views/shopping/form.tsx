@@ -1,11 +1,19 @@
 import type { FC } from "hono/jsx";
+import type { pantry } from "@/db/schema.js";
 import { Layout } from "@/web/views/layout.js";
 
-export const ShoppingForm: FC = () => (
+type ShoppingItem = Partial<typeof pantry.$inferSelect>;
+
+export const ShoppingForm: FC<{
+  item?: ShoppingItem;
+  action: string;
+  title: string;
+  submitLabel: string;
+}> = ({ item, action, title, submitLabel }) => (
   <Layout>
     <main class="max-w-lg mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-emerald-600 mb-6">Add to shopping list</h1>
-      <form method="post" action="/shopping" class="space-y-4">
+      <h1 class="text-2xl font-bold text-emerald-600 mb-6">{title}</h1>
+      <form method="post" action={action} class="space-y-4">
         <div>
           <label for="name" class="block text-sm text-gray-500 mb-1">
             Name
@@ -14,6 +22,7 @@ export const ShoppingForm: FC = () => (
             type="text"
             id="name"
             name="name"
+            value={item?.name ?? ""}
             required
             class="w-full border border-gray-300 rounded px-3 py-2"
           />
@@ -27,7 +36,7 @@ export const ShoppingForm: FC = () => (
               type="number"
               id="quantity"
               name="quantity"
-              value="1"
+              value={item?.quantity ?? 1}
               required
               min="1"
               class="w-full border border-gray-300 rounded px-3 py-2"
@@ -41,6 +50,7 @@ export const ShoppingForm: FC = () => (
               type="text"
               id="unit"
               name="unit"
+              value={item?.unit ?? ""}
               placeholder="個, ml, g …"
               class="w-full border border-gray-300 rounded px-3 py-2"
             />
@@ -51,7 +61,7 @@ export const ShoppingForm: FC = () => (
             type="submit"
             class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
           >
-            Add
+            {submitLabel}
           </button>
           <a href="/shopping" class="px-4 py-2 text-gray-500 hover:text-gray-700">
             Cancel
