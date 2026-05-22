@@ -21,18 +21,20 @@ Node.js is pinned via [Volta](https://volta.sh/) — all commands go through `vo
 
 ```bash
 volta run npm install
-volta run npm run db:migrate   # apply migrations once
-volta run npm run start:dev    # web server: http://localhost:3000
-volta run npm run mcp          # MCP server over stdio
-volta run npm run test         # tests
+volta run npm run start:dev   # dev web server: http://localhost:3000 (db/fridge.db, header shows "Fridge[dev]")
+volta run npm run start       # prod web server: http://localhost:8080 (db/fridge.prod.db, NODE_ENV=production)
+volta run npm run mcp         # MCP server over stdio (uses prod DB)
+volta run npm run test        # tests
 ```
+
+Both `start:dev` and `start` auto-apply pending migrations on startup.
 
 ## Watching logs
 
 Structured JSONL logs land under `logs/` (gitignored). `npm run start:dev` already pretty-prints web logs to stdout. To tail the files yourself, pipe through `pino-pretty` with `-S` to keep each entry on one line:
 
 ```bash
-tail -f logs/web.jsonl | npx pino-pretty -S
-tail -f logs/mcp.jsonl | npx pino-pretty -S
-cat logs/mcp-test.jsonl | npx pino-pretty -S   # last test run
+tail -f logs/web.jsonl | npx pino-pretty -S              # dev web
+tail -f logs/web-production.jsonl | npx pino-pretty -S   # prod web (also for MCP via mcp-production.jsonl)
+cat logs/mcp-test.jsonl | npx pino-pretty -S             # last test run
 ```

@@ -50,9 +50,11 @@ db/migrations/      Drizzle migrations, committed to git
 
 ## Environment
 
-- `.env`: local development (`npm run start:dev`). SQLite database `db/fridge.db`.
+- `.env`: local development (`npm run start:dev`). SQLite database `db/fridge.db`. Default port `3000`. Header/title show `Fridge[dev]` to distinguish from prod.
+- `.env.production`: production (`npm run start` and `npm run mcp`). `DATABASE_PATH=db/fridge.prod.db`, `NODE_ENV=production`, `PORT=8080`. Committed (no secrets); per-machine overrides go in `.env.production.local`.
 - `.env.test`: automated tests. `DATABASE_PATH=:memory:`. Vitest helpers also hardcode `:memory:` for direct DB construction. Playwright (`npm run start:e2e`) reads this file via `tsx --env-file`, so the E2E server runs against an in-process in-memory SQLite. The `/__test__/reset` endpoint (enabled only when `NODE_ENV=test`) lets specs clear it between tests.
-- Production currently uses the same `DATABASE_PATH`-based SQLite configuration.
+
+Both `start:dev` and `start:production` auto-apply pending Drizzle migrations on entry (`src/db/migrate.ts#runMigrations`). The standalone `npm run db:migrate` is still available for server-less migration runs.
 
 SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
 
@@ -61,19 +63,21 @@ SQLite database files under `db/*.db` are generated and gitignored. Migration SQ
 Run all npm commands through `volta run` so the Node.js version from `package.json` is used.
 
 ```bash
-volta run npm run start:dev    # Build CSS, run migrations, then start the dev server (manual use only)
-volta run npm run test         # Run all tests (unit + E2E)
-volta run npm run test:unit    # Vitest only
-volta run npm run test:e2e     # Playwright E2E only
-volta run npm run typecheck    # Type check
-volta run npm run lint         # Lint
-volta run npm run format       # Format
-volta run npm run css:build    # Build Tailwind CSS once
-volta run npm run db:generate  # Generate migrations
-volta run npm run db:migrate   # Run migrations
+volta run npm run start:dev   # Build CSS, auto-migrate, then start the dev server on :3000 (manual use only)
+volta run npm run start       # Build JS+CSS, auto-migrate, then start node against prod DB on :8080 (manual use only)
+volta run npm run build       # tsc + tsc-alias → dist/
+volta run npm run test               # Run all tests (unit + E2E)
+volta run npm run test:unit          # Vitest only
+volta run npm run test:e2e           # Playwright E2E only
+volta run npm run typecheck          # Type check
+volta run npm run lint               # Lint
+volta run npm run format             # Format
+volta run npm run css:build          # Build Tailwind CSS once
+volta run npm run db:generate        # Generate migrations
+volta run npm run db:migrate         # Run migrations without starting a server
 ```
 
-> `npm run start:dev` is **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke it — it reads `.env` and writes to `db/fridge.db`. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and `db/test.db`.
+> `npm run start:dev` and `npm run start` are **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke them — they read `.env` / `.env.production` and write to the corresponding DB file. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and an in-memory SQLite.
 
 `public/dist.css` is generated and gitignored. Build it before starting the server; `npm run start:dev` already handles this.
 
@@ -88,7 +92,7 @@ The shared workflow bodies live under `.agents/workflows/`. Tool-specific entryp
 
 ## MCP Configuration
 
-MCP runs over stdio transport. Claude Desktop can use:
+MCP runs over stdio transport. `npm run mcp` builds the project and starts the MCP server against the **production** database (`db/fridge.prod.db`) by loading `.env.production`. Claude Desktop can use:
 
 ```json
 {
@@ -112,8 +116,9 @@ MCP runs over stdio transport. Claude Desktop can use:
 
 Pino-based structured logs are written under `logs/` (gitignored).
 
-- `logs/web.jsonl` — every HTTP request handled by the web server. POST/PUT/PATCH/DELETE bodies are included. `npm run start:dev` also prints the same lines to stdout in pretty format so you can watch traffic live.
-- `logs/mcp.jsonl` — every MCP tool invocation (tool name, params, output summary, duration; stack trace on error). MCP runs over stdio, so logs go to file only.
+- `logs/web.jsonl` — every HTTP request handled by the dev web server. POST/PUT/PATCH/DELETE bodies are included. `npm run start:dev` also prints the same lines to stdout in pretty format so you can watch traffic live.
+- `logs/mcp.jsonl` — MCP tool invocations under dev (tool name, params, output summary, duration; stack trace on error).
+- `logs/{web,mcp}-production.jsonl` — same as above but for `start:production` / `npm run mcp` (which always runs in production mode). File only — no stdout output.
 - `logs/{web,mcp}-test.jsonl` — logs from the test run. `tests/helpers/setup-logs.ts` wipes `logs/*-test.jsonl` at the start of every `npm run test` so each run is fresh.
 
 Human-facing instructions for tailing logs with `pino-pretty` live in [`README.md`](./README.md).

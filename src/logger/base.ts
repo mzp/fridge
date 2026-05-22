@@ -8,8 +8,14 @@ export function isTestEnv(): boolean {
   return process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
 }
 
+export function isProductionEnv(): boolean {
+  return process.env["NODE_ENV"] === "production";
+}
+
 export function logFilename(base: string): string {
-  return isTestEnv() ? `${base}-test.jsonl` : `${base}.jsonl`;
+  if (isTestEnv()) return `${base}-test.jsonl`;
+  if (isProductionEnv()) return `${base}-production.jsonl`;
+  return `${base}.jsonl`;
 }
 
 export function fileDestination(filename: string, sync: boolean) {
