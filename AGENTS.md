@@ -54,7 +54,7 @@ db/migrations/      Drizzle migrations, committed to git
 - `.env.production`: production (`npm run start` and `npm run mcp`). `DATABASE_PATH=db/fridge.prod.db`, `NODE_ENV=production`, `PORT=8080`. Committed (no secrets); per-machine overrides go in `.env.production.local`.
 - `.env.test`: automated tests. `DATABASE_PATH=:memory:`. Vitest helpers also hardcode `:memory:` for direct DB construction. Playwright (`npm run start:e2e`) reads this file via `tsx --env-file`, so the E2E server runs against an in-process in-memory SQLite. The `/__test__/reset` endpoint (enabled only when `NODE_ENV=test`) lets specs clear it between tests.
 
-Both `start:dev` and `start` auto-apply pending Drizzle migrations on entry (`src/db/migrate.ts#runMigrations`). The standalone `npm run db:migrate` is still available for server-less migration runs.
+Both `start:dev` and `start` auto-apply pending Drizzle migrations on entry (`src/db/migrate.ts#runMigrations`). The standalone `npm run db:migrate:dev` is still available for server-less migration runs against the dev DB.
 
 SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
 
@@ -73,9 +73,9 @@ volta run npm run build          # tsc + tsc-alias → dist/
 ### Development
 
 ```bash
-volta run npm run start:dev      # Build CSS, auto-migrate, start tsx on :3000 against dev DB (manual use only)
-volta run npm run db:generate    # Generate new Drizzle migration files from schema changes
-volta run npm run db:migrate     # Apply migrations without starting a server
+volta run npm run start:dev          # Build CSS, auto-migrate, start tsx on :3000 against dev DB (manual use only)
+volta run npm run db:generate:dev    # Generate new Drizzle migration files from schema changes
+volta run npm run db:migrate:dev     # Apply migrations to the dev DB without starting a server
 ```
 
 ### Tests & quality
