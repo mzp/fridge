@@ -54,7 +54,7 @@ db/migrations/      Drizzle migrations, committed to git
 - `.env.production`: production (`npm run start` and `npm run mcp`). `DATABASE_PATH=db/fridge.prod.db`, `NODE_ENV=production`, `PORT=8080`. Committed (no secrets); per-machine overrides go in `.env.production.local`.
 - `.env.test`: automated tests. `DATABASE_PATH=:memory:`. Vitest helpers also hardcode `:memory:` for direct DB construction. Playwright (`npm run start:e2e`) reads this file via `tsx --env-file`, so the E2E server runs against an in-process in-memory SQLite. The `/__test__/reset` endpoint (enabled only when `NODE_ENV=test`) lets specs clear it between tests.
 
-Both `start:dev` and `start:production` auto-apply pending Drizzle migrations on entry (`src/db/migrate.ts#runMigrations`). The standalone `npm run db:migrate` is still available for server-less migration runs.
+Both `start:dev` and `start` auto-apply pending Drizzle migrations on entry (`src/db/migrate.ts#runMigrations`). The standalone `npm run db:migrate` is still available for server-less migration runs.
 
 SQLite database files under `db/*.db` are generated and gitignored. Migration SQL files under `db/migrations/` should be committed.
 
@@ -62,24 +62,37 @@ SQLite database files under `db/*.db` are generated and gitignored. Migration SQ
 
 Run all npm commands through `volta run` so the Node.js version from `package.json` is used.
 
+### Production
+
 ```bash
-volta run npm run start:dev   # Build CSS, auto-migrate, then start the dev server on :3000 (manual use only)
-volta run npm run start       # Build JS+CSS, auto-migrate, then start node against prod DB on :8080 (manual use only)
-volta run npm run build       # tsc + tsc-alias → dist/
-volta run npm run test               # Run all tests (unit + E2E)
-volta run npm run test:unit          # Vitest only
-volta run npm run test:e2e           # Playwright E2E only
-volta run npm run typecheck          # Type check
-volta run npm run lint               # Lint
-volta run npm run format             # Format
-volta run npm run css:build          # Build Tailwind CSS once
-volta run npm run db:generate        # Generate migrations
-volta run npm run db:migrate         # Run migrations without starting a server
+volta run npm run start          # Build JS+CSS, auto-migrate, start node against prod DB on :8080 (manual use only)
+volta run npm run mcp            # Build and run MCP server over stdio against prod DB (Claude Desktop uses this)
+volta run npm run build          # tsc + tsc-alias → dist/
+```
+
+### Development
+
+```bash
+volta run npm run start:dev      # Build CSS, auto-migrate, start tsx on :3000 against dev DB (manual use only)
+volta run npm run db:generate    # Generate new Drizzle migration files from schema changes
+volta run npm run db:migrate     # Apply migrations without starting a server
+```
+
+### Tests & quality
+
+```bash
+volta run npm run test           # Unit + E2E
+volta run npm run test:unit      # Vitest only
+volta run npm run test:e2e       # Playwright only
+volta run npm run typecheck      # tsc --noEmit
+volta run npm run lint           # biome check
+volta run npm run format         # biome format --write
+volta run npm run css:build      # Tailwind CSS one-off (the start scripts already invoke this)
 ```
 
 > `npm run start:dev` and `npm run start` are **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke them — they read `.env` / `.env.production` and write to the corresponding DB file. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and an in-memory SQLite.
 
-`public/dist.css` is generated and gitignored. Build it before starting the server; `npm run start:dev` already handles this.
+`public/dist.css` is generated and gitignored. Build it before starting the server; the start scripts already handle this.
 
 ## Agent Workflows
 
