@@ -78,20 +78,20 @@ volta run npm run start:dev    # Build CSS, auto-migrate, start tsx on :3000 aga
 ### Build & setup
 
 ```bash
-volta run npm run build:ts     # tsc + tsc-alias → dist/
-volta run npm run build:css    # Tailwind CSS one-off (the start scripts already invoke this)
-volta run npm run db:generate  # Generate new Drizzle migration files from schema changes
+volta run npm run typescript:build   # tsc + tsc-alias → dist/
+volta run npm run css:build          # Tailwind CSS one-off (the start scripts already invoke this)
+volta run npm run db:generate        # Generate new Drizzle migration files from schema changes
 ```
 
 ### Tests & quality
 
 ```bash
-volta run npm run test         # Unit + E2E
-volta run npm run test:unit    # Vitest only
-volta run npm run test:e2e     # Playwright only
-volta run npm run typecheck    # tsc --noEmit
-volta run npm run lint         # biome check
-volta run npm run format       # biome format --write
+volta run npm run test               # Unit + E2E
+volta run npm run test:unit          # Vitest only
+volta run npm run test:e2e           # Playwright only
+volta run npm run typescript:check   # tsc --noEmit
+volta run npm run biome:lint         # biome check
+volta run npm run biome:format       # biome format --write
 ```
 
 > `npm run start:dev` and `npm run start` are **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke them — they read `.env` / `.env.production` and write to the corresponding DB file. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and an in-memory SQLite.
