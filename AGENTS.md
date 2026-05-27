@@ -70,7 +70,7 @@ volta run npm run start:dev  # build CSS, auto-migrate, start tsx on :3000 again
 volta run npm run mcp        # build TS, start MCP stdio server against prod DB (Claude Desktop uses this)
 ```
 
-> `npm run start:dev` and `npm run start` are **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke them — they read `.env` / `.env.production` and write to the corresponding DB file. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and an in-memory SQLite.
+> `npm run start` is **for manual human verification only**. AI agents and automated tests (Vitest, Playwright) must not invoke it — it reads `.env.production` and writes to the prod DB. `npm run start:dev` writes to the dev DB (`db/fridge.db`); agents may run it only with explicit user permission. Playwright spawns its own server via `start:e2e`, which uses `.env.test` and an in-memory SQLite.
 
 ### TypeScript (tsc)
 
