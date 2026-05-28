@@ -43,7 +43,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
   loggedTool(
     server,
     "add_shopping_item",
-    "Add or update a shopping list item by name. If the same name already exists, its quantity and unit are overwritten with the supplied values.",
+    "Add or update a shopping list item by name. If the same name already exists, its quantity, unit, and best_before_days are overwritten with the supplied values. Supply best_before_days for perishables (meat, vegetables, dairy) so the item is tracked in the pantry on purchase. Omit best_before_days for shelf-stable goods like seasonings (soy sauce, salt) or canned goods — on purchase they are recorded as purchased without being added to pantry inventory.",
     {
       name: z.string().describe("Item name (key)"),
       quantity: z.number().int().positive().describe("Final desired quantity"),
@@ -51,8 +51,16 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .string()
         .describe("Unit (e.g. 個, ml, g). Overwrites existing unit when supplied.")
         .optional(),
+      best_before_days: z
+        .number()
+        .int()
+        .positive()
+        .describe(
+          "Days until expiry. Set for perishables (meat, vegetables, dairy) — they will move to the pantry on purchase. Omit for shelf-stable items like seasonings or canned goods.",
+        )
+        .optional(),
     },
-    ({ name, quantity, unit }) => {
+    ({ name, quantity, unit, best_before_days }) => {
       const existing = db
         .select()
         .from(pantry)
@@ -65,7 +73,11 @@ export function registerShoppingTools(server: McpServer, db: Db) {
       if (existing) {
         result = db
           .update(pantry)
-          .set({ quantity, unit: unit ?? existing.unit })
+          .set({
+            quantity,
+            unit: unit ?? existing.unit,
+            best_before_days: best_before_days ?? null,
+          })
           .where(eq(pantry.id, existing.id))
           .returning()
           .get();
@@ -78,7 +90,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
             quantity,
             unit: unit ?? null,
             stock_date: null,
-            best_before_days: null,
+            best_before_days: best_before_days ?? null,
             status: "in_stock",
             category: "ingredient",
           })
@@ -96,15 +108,23 @@ export function registerShoppingTools(server: McpServer, db: Db) {
   loggedTool(
     server,
     "purchase_shopping_item",
-    "Mark a shopping list item as purchased and promote it to the pantry by setting stock_date.",
+    "Mark a shopping list item as purchased. If the item has best_before_days set (or supplied here), it is promoted to the pantry with stock_date. Otherwise it is just recorded as purchased (status='purchased') and removed from the shopping list without becoming a pantry inventory entry.",
     {
       id: z.number().int().describe("Shopping item ID (from get_shopping_list)"),
       stock_date: z
         .string()
         .date()
-        .describe("Stock date (YYYY-MM-DD). Defaults to today.")
+        .describe(
+          "Stock date (YYYY-MM-DD). Defaults to today. Ignored when not promoting to pantry.",
+        )
         .optional(),
-      best_before_days: z.number().int().describe("Days until expiry").optional(),
+      best_before_days: z
+        .number()
+        .int()
+        .describe(
+          "Override stored best_before_days. Setting it forces promotion to pantry even if the shopping item had none.",
+        )
+        .optional(),
       category: z.enum(["ingredient", "prepared"]).describe("Defaults to 'ingredient'.").optional(),
     },
     ({ id, stock_date, best_before_days, category }) => {
@@ -119,6 +139,25 @@ export function registerShoppingTools(server: McpServer, db: Db) {
       if (!item) {
         return {
           content: [{ type: "text", text: `Shopping item #${id} not found.` }],
+        };
+      }
+
+      const effectiveBestBeforeDays = best_before_days ?? item.best_before_days;
+
+      if (effectiveBestBeforeDays == null) {
+        const result = db
+          .update(pantry)
+          .set({ status: "purchased" })
+          .where(eq(pantry.id, id))
+          .returning()
+          .get();
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Purchased: [${result.id}] ${result.name} (no freshness tracking)`,
+            },
+          ],
         };
       }
 
@@ -142,7 +181,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
           .update(pantry)
           .set({
             stock_date: targetDate,
-            best_before_days: best_before_days ?? null,
+            best_before_days: effectiveBestBeforeDays,
             category: category ?? item.category,
           })
           .where(eq(pantry.id, id))

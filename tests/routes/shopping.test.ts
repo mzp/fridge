@@ -9,10 +9,16 @@ function createShoppingApp(db = createTestDb()) {
   return mountRoute("/shopping", createShoppingRoutes(db));
 }
 
-function seedShoppingItem(db: Db, name = "りんご", quantity = 3, unit: string | null = null) {
+function seedShoppingItem(
+  db: Db,
+  name = "りんご",
+  quantity = 3,
+  unit: string | null = null,
+  best_before_days: number | null = null,
+) {
   return db
     .insert(schema.pantry)
-    .values({ name, quantity, unit, stock_date: null, status: "in_stock" })
+    .values({ name, quantity, unit, stock_date: null, best_before_days, status: "in_stock" })
     .returning()
     .get();
 }
@@ -95,6 +101,25 @@ describe("POST /shopping", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.stock_date).toBeNull();
     expect(rows[0]?.quantity).toBe(2);
+    expect(rows[0]?.best_before_days).toBeNull();
+  });
+
+  it("stores best_before_days when supplied", async () => {
+    const db = createTestDb();
+    const body = new URLSearchParams({
+      name: "鶏肉",
+      quantity: "1",
+      unit: "パック",
+      best_before_days: "3",
+    });
+    await createShoppingApp(db).request("/shopping", {
+      method: "POST",
+      body,
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+    });
+    const rows = db.select().from(schema.pantry).all();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.best_before_days).toBe(3);
   });
 
   it("overwrites quantity and unit when the same name already exists", async () => {
@@ -114,9 +139,9 @@ describe("POST /shopping", () => {
 });
 
 describe("POST /shopping/:id/purchase", () => {
-  it("sets stock_date to today and redirects to the pantry detail", async () => {
+  it("promotes to pantry when best_before_days is set", async () => {
     const db = createTestDb();
-    const item = seedShoppingItem(db, "豆腐", 2);
+    const item = seedShoppingItem(db, "豆腐", 2, "丁", 5);
     const res = await createShoppingApp(db).request(`/shopping/${item.id}/purchase`, {
       method: "POST",
     });
@@ -125,6 +150,26 @@ describe("POST /shopping/:id/purchase", () => {
 
     const updated = db.select().from(schema.pantry).all();
     expect(updated[0]?.stock_date).toBe(TODAY);
+    expect(updated[0]?.status).toBe("in_stock");
+  });
+
+  it("marks as purchased without pantry promotion when best_before_days is null", async () => {
+    const db = createTestDb();
+    const item = seedShoppingItem(db, "醤油", 1, "本", null);
+    const res = await createShoppingApp(db).request(`/shopping/${item.id}/purchase`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/shopping");
+
+    const rows = db.select().from(schema.pantry).all();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.stock_date).toBeNull();
+    expect(rows[0]?.status).toBe("purchased");
+
+    const listHtml = await (await createShoppingApp(db).request("/shopping")).text();
+    expect(listHtml).not.toContain("醤油");
+    expect(listHtml).toContain("Shopping list is empty.");
   });
 
   it("merges into an existing pantry row when (name, today) collides", async () => {
@@ -134,7 +179,7 @@ describe("POST /shopping/:id/purchase", () => {
       .values({ name: "卵", quantity: 4, unit: "個", stock_date: TODAY })
       .returning()
       .get();
-    const shoppingItem = seedShoppingItem(db, "卵", 6, "個");
+    const shoppingItem = seedShoppingItem(db, "卵", 6, "個", 7);
     const res = await createShoppingApp(db).request(`/shopping/${shoppingItem.id}/purchase`, {
       method: "POST",
     });

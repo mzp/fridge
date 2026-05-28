@@ -14,6 +14,14 @@ export const ShoppingDetail: FC<{ item: PantryItem }> = ({ item }) => (
           <dt class="detail-label w-24">Quantity</dt>
           <dd>{item.quantityLabel()}</dd>
         </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Best before</dt>
+          <dd>
+            {item.record.best_before_days == null
+              ? "Not tracked"
+              : `${item.record.best_before_days} days`}
+          </dd>
+        </div>
       </dl>
       <div class="flex gap-3">
         <a href={`/shopping/${item.record.id}/edit`} class="btn btn-md btn-primary">

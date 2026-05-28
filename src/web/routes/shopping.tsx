@@ -83,9 +83,13 @@ export function createShoppingRoutes(db: Db) {
     const name = String(body["name"]).trim();
     const quantity = Number(body["quantity"]);
     const unit = body["unit"] ? String(body["unit"]) : null;
+    const best_before_days = body["best_before_days"] ? Number(body["best_before_days"]) : null;
 
-    db.update(pantry).set({ name, quantity, unit }).where(eq(pantry.id, id)).run();
-    logger.info({ id, name, quantity, unit }, "shopping_updated");
+    db.update(pantry)
+      .set({ name, quantity, unit, best_before_days })
+      .where(eq(pantry.id, id))
+      .run();
+    logger.info({ id, name, quantity, unit, best_before_days }, "shopping_updated");
     return c.redirect(`/shopping/${id}`);
   });
 
@@ -94,6 +98,7 @@ export function createShoppingRoutes(db: Db) {
     const name = String(body["name"]).trim();
     const quantity = Number(body["quantity"]);
     const unit = body["unit"] ? String(body["unit"]) : null;
+    const best_before_days = body["best_before_days"] ? Number(body["best_before_days"]) : null;
 
     const existing = db
       .select()
@@ -103,10 +108,10 @@ export function createShoppingRoutes(db: Db) {
 
     if (existing) {
       db.update(pantry)
-        .set({ quantity, unit: unit ?? existing.unit })
+        .set({ quantity, unit: unit ?? existing.unit, best_before_days })
         .where(eq(pantry.id, existing.id))
         .run();
-      logger.info({ id: existing.id, name, quantity }, "shopping_overwritten");
+      logger.info({ id: existing.id, name, quantity, best_before_days }, "shopping_overwritten");
     } else {
       const inserted = db
         .insert(pantry)
@@ -115,13 +120,13 @@ export function createShoppingRoutes(db: Db) {
           quantity,
           unit,
           stock_date: null,
-          best_before_days: null,
+          best_before_days,
           status: "in_stock",
           category: "ingredient",
         })
         .returning()
         .get();
-      logger.info({ id: inserted.id, name }, "shopping_created");
+      logger.info({ id: inserted.id, name, best_before_days }, "shopping_created");
     }
     return c.redirect("/shopping");
   });
@@ -134,6 +139,12 @@ export function createShoppingRoutes(db: Db) {
       .where(and(eq(pantry.id, id), isNull(pantry.stock_date)))
       .get();
     if (!item) return c.notFound();
+
+    if (item.best_before_days == null) {
+      db.update(pantry).set({ status: "purchased" }).where(eq(pantry.id, id)).run();
+      logger.info({ id, name: item.name }, "shopping_purchased_untracked");
+      return c.redirect("/shopping");
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const clash = db
