@@ -56,6 +56,20 @@ export const ShoppingForm: FC<{
               class="form-control"
             />
           </div>
+          <div class="flex-1">
+            <label for="best_before_days" class="form-label">
+              Best before (days)
+            </label>
+            <input
+              type="number"
+              id="best_before_days"
+              name="best_before_days"
+              value={item?.best_before_days ?? ""}
+              min="1"
+              placeholder="empty = no tracking"
+              class="form-control"
+            />
+          </div>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-md btn-primary">

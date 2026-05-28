@@ -49,6 +49,18 @@ describe("add_shopping_item", () => {
     const rows = db.select().from(schema.pantry).all();
     expect(rows).toHaveLength(1);
     expect(rows[0]?.stock_date).toBeNull();
+    expect(rows[0]?.best_before_days).toBeNull();
+  });
+
+  it("stores best_before_days when supplied", async () => {
+    const db = createTestDb();
+    const client = await createTestClient(db, registerShoppingTools);
+    await client.callTool({
+      name: "add_shopping_item",
+      arguments: { name: "鶏肉", quantity: 1, unit: "パック", best_before_days: 3 },
+    });
+    const rows = db.select().from(schema.pantry).all();
+    expect(rows[0]?.best_before_days).toBe(3);
   });
 
   it("overwrites quantity and unit when the same name already exists on the list", async () => {
@@ -92,6 +104,48 @@ describe("purchase_shopping_item", () => {
     expect((pantry.content as Array<{ text: string }>)[0]?.text).toContain("豆腐 x2丁");
   });
 
+  it("uses stored best_before_days from add_shopping_item", async () => {
+    const db = createTestDb();
+    const client = await createTestClient(db, registerAll);
+    await client.callTool({
+      name: "add_shopping_item",
+      arguments: { name: "鶏肉", quantity: 1, unit: "パック", best_before_days: 3 },
+    });
+    await client.callTool({ name: "purchase_shopping_item", arguments: { id: 1 } });
+
+    const rows = db.select().from(schema.pantry).all();
+    expect(rows[0]?.stock_date).toBe(TODAY);
+    expect(rows[0]?.best_before_days).toBe(3);
+    expect(rows[0]?.status).toBe("in_stock");
+  });
+
+  it("marks as purchased (no pantry promotion) when best_before_days is unset", async () => {
+    const db = createTestDb();
+    const client = await createTestClient(db, registerAll);
+    await client.callTool({
+      name: "add_shopping_item",
+      arguments: { name: "醤油", quantity: 1, unit: "本" },
+    });
+    const res = await client.callTool({
+      name: "purchase_shopping_item",
+      arguments: { id: 1 },
+    });
+    expect(res.content).toEqual([
+      { type: "text", text: "Purchased: [1] 醤油 (no freshness tracking)" },
+    ]);
+
+    const rows = db.select().from(schema.pantry).all();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.stock_date).toBeNull();
+    expect(rows[0]?.status).toBe("purchased");
+
+    const shopping = await client.callTool({ name: "get_shopping_list", arguments: {} });
+    expect(shopping.content).toEqual([{ type: "text", text: "Shopping list is empty." }]);
+
+    const pantry = await client.callTool({ name: "get_pantry", arguments: {} });
+    expect(pantry.content).toEqual([{ type: "text", text: "No items in stock." }]);
+  });
+
   it("merges with an existing pantry row when name + today collide", async () => {
     const db = createTestDb();
     db.insert(schema.pantry)
@@ -100,7 +154,7 @@ describe("purchase_shopping_item", () => {
     const client = await createTestClient(db, registerShoppingTools);
     await client.callTool({
       name: "add_shopping_item",
-      arguments: { name: "卵", quantity: 6, unit: "個" },
+      arguments: { name: "卵", quantity: 6, unit: "個", best_before_days: 7 },
     });
     await client.callTool({
       name: "purchase_shopping_item",

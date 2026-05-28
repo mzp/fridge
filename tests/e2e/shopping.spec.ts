@@ -5,12 +5,13 @@ test.beforeEach(async () => {
   await resetDb();
 });
 
-test("add to shopping list, then purchase: appears in pantry", async ({ page }) => {
+test("add perishable to shopping list, then purchase: promoted to pantry", async ({ page }) => {
   await page.goto("/shopping");
   await page.getByRole("link", { name: "+ Add item" }).click();
   await page.getByLabel("Name").fill("豆腐");
   await page.getByLabel("Quantity").fill("2");
   await page.getByLabel("Unit").fill("丁");
+  await page.getByLabel("Best before (days)").fill("5");
   await page.getByRole("button", { name: "Add" }).click();
 
   await expect(page).toHaveURL("/shopping");
@@ -22,6 +23,26 @@ test("add to shopping list, then purchase: appears in pantry", async ({ page }) 
 
   await page.goto("/pantry");
   await expect(page.getByRole("link", { name: "豆腐" })).toBeVisible();
+});
+
+test("add non-perishable to shopping list, then purchase: removed from list without entering pantry", async ({
+  page,
+}) => {
+  await page.goto("/shopping/new");
+  await page.getByLabel("Name").fill("醤油");
+  await page.getByLabel("Quantity").fill("1");
+  await page.getByLabel("Unit").fill("本");
+  await page.getByRole("button", { name: "Add" }).click();
+
+  await expect(page.getByText("醤油")).toBeVisible();
+
+  await page.getByRole("link", { name: "醤油" }).click();
+  await page.getByRole("button", { name: "Purchase" }).click();
+  await expect(page).toHaveURL("/shopping");
+  await expect(page.getByText("Shopping list is empty.")).toBeVisible();
+
+  await page.goto("/pantry");
+  await expect(page.getByRole("link", { name: "醤油" })).toHaveCount(0);
 });
 
 test("edit shopping item: unit change is reflected on the list", async ({ page }) => {
