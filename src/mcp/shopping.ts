@@ -49,7 +49,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
       quantity: z.number().int().positive().describe("Final desired quantity"),
       unit: z
         .string()
-        .describe("Unit (e.g. 個, ml, g). Overwrites existing unit when supplied.")
+        .describe("Unit (e.g. pcs, ml, g). Overwrites existing unit when supplied.")
         .optional(),
       best_before_days: z
         .number()

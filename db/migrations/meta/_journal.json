@@ -50,6 +50,13 @@
       "when": 1779080553469,
       "tag": "0006_nosy_marvex",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1780461804792,
+      "tag": "0007_meal_categories",
+      "breakpoints": true
     }
   ]
 }

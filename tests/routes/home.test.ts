@@ -16,9 +16,9 @@ describe("GET /", () => {
 
     db.insert(schema.meals)
       .values([
-        { date: threeDaysAgo, main_dish: "過去の料理" },
-        { date: today, main_dish: "カレーライス", side_dish: "サラダ" },
-        { date: tomorrow, main_dish: "肉じゃが" },
+        { date: threeDaysAgo, main: "過去の料理" },
+        { date: today, main: "カレーライス", hot_side: "きんぴら" },
+        { date: tomorrow, main: "肉じゃが" },
       ])
       .run();
 
@@ -27,7 +27,7 @@ describe("GET /", () => {
 
     const html = await res.text();
     expect(html).toContain("カレーライス");
-    expect(html).toContain("サラダ");
+    expect(html).toContain("きんぴら");
     expect(html).toContain("肉じゃが");
     expect(html).not.toContain("過去の料理");
   });

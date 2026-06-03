@@ -8,7 +8,7 @@ type PantryLog = typeof pantryLogs.$inferSelect;
 export const PantryDetail: FC<{
   item: PantryItem;
   logs: PantryLog[];
-  mealsByDate: Record<string, { id: number; main_dish: string }>;
+  mealsByDate: Record<string, { id: number; main: string }>;
 }> = ({ item, logs, mealsByDate }) => {
   const days = item.daysRemaining();
 
@@ -93,7 +93,7 @@ export const PantryDetail: FC<{
                           href={`/meals/${mealsByDate[log.recorded_at]?.id}`}
                           class="ml-2 text-emerald-600 hover:underline"
                         >
-                          {mealsByDate[log.recorded_at]?.main_dish}
+                          {mealsByDate[log.recorded_at]?.main}
                         </a>
                       )}
                     </td>

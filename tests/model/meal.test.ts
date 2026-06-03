@@ -5,23 +5,40 @@ function meal(overrides: Partial<MealRecord> = {}): MealRecord {
   return {
     id: 1,
     date: "2026-05-15",
-    main_dish: "カレーライス",
-    side_dish: null,
+    rice: null,
+    main: "カレーライス",
+    hot_side: null,
+    cold_side: null,
+    soup: null,
     ...overrides,
   };
 }
 
 describe("Meal", () => {
-  it("formats meal summaries with optional side dish", () => {
+  it("formats meal summaries with the main dish first and category dishes joined", () => {
     expect(new Meal(meal()).summaryLabel()).toBe("2026-05-15: カレーライス");
-    expect(new Meal(meal({ side_dish: "サラダ" })).summaryLabel()).toBe(
-      "2026-05-15: カレーライス | サラダ",
+    expect(new Meal(meal({ hot_side: "きんぴら" })).summaryLabel()).toBe(
+      "2026-05-15: カレーライス | きんぴら",
     );
+    expect(
+      new Meal(
+        meal({ rice: "白米", hot_side: "肉じゃが", cold_side: "おひたし", soup: "味噌汁" }),
+      ).summaryLabel(),
+    ).toBe("2026-05-15: カレーライス | 白米 | 肉じゃが | おひたし | 味噌汁");
   });
 
-  it("provides side dish labels with a fallback", () => {
-    expect(new Meal(meal()).sideDishLabel("—")).toBe("—");
-    expect(new Meal(meal({ side_dish: "サラダ" })).sideDishLabel("—")).toBe("サラダ");
+  it("provides category dish labels with a fallback", () => {
+    expect(new Meal(meal()).hotSideLabel("—")).toBe("—");
+    expect(new Meal(meal({ hot_side: "きんぴら" })).hotSideLabel("—")).toBe("きんぴら");
+    expect(new Meal(meal({ rice: "白米" })).riceLabel("—")).toBe("白米");
+    expect(new Meal(meal({ cold_side: "サラダ" })).coldSideLabel("—")).toBe("サラダ");
+    expect(new Meal(meal({ soup: "味噌汁" })).soupLabel("—")).toBe("味噌汁");
+  });
+
+  it("returns the weekday label for the meal date", () => {
+    expect(new Meal(meal({ date: "2026-05-15" })).weekdayLabel()).toBe("Fri");
+    expect(new Meal(meal({ date: "2026-05-16" })).weekdayLabel()).toBe("Sat");
+    expect(new Meal(meal({ date: "2026-05-17" })).weekdayLabel()).toBe("Sun");
   });
 
   it("checks whether the meal date is in the past", () => {

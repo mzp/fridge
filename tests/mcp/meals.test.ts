@@ -9,15 +9,15 @@ describe("get_meals", () => {
 
     await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-15", main_dish: "カレーライス" },
+      arguments: { date: "2026-05-15", main: "カレーライス" },
     });
     await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-16", main_dish: "肉じゃが", side_dish: "ほうれん草のおひたし" },
+      arguments: { date: "2026-05-16", main: "肉じゃが", hot_side: "ほうれん草のおひたし" },
     });
     await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-17", main_dish: "鮭の塩焼き" },
+      arguments: { date: "2026-05-17", main: "鮭の塩焼き" },
     });
 
     const result = await client.callTool({
@@ -38,7 +38,7 @@ describe("get_meals", () => {
 
     await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-15", main_dish: "カレーライス" },
+      arguments: { date: "2026-05-15", main: "カレーライス" },
     });
 
     const result = await client.callTool({
@@ -59,13 +59,13 @@ describe("get_meals", () => {
 
     const added = await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-15", main_dish: "カレーライス" },
+      arguments: { date: "2026-05-15", main: "カレーライス" },
     });
     expect(added.content).toEqual([{ type: "text", text: "Added meal: 2026-05-15: カレーライス" }]);
 
     const updated = await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-15", main_dish: "ビーフカレー", side_dish: "サラダ" },
+      arguments: { date: "2026-05-15", main: "ビーフカレー", hot_side: "サラダ" },
     });
     expect(updated.content).toEqual([
       { type: "text", text: "Updated meal: 2026-05-15: ビーフカレー | サラダ" },
@@ -86,7 +86,7 @@ describe("delete_meal", () => {
 
     await client.callTool({
       name: "set_meal",
-      arguments: { date: "2026-05-15", main_dish: "カレーライス" },
+      arguments: { date: "2026-05-15", main: "カレーライス" },
     });
     const result = await client.callTool({
       name: "delete_meal",

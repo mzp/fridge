@@ -2,17 +2,41 @@ import type { meals } from "@/db/schema.js";
 
 export type MealRecord = typeof meals.$inferSelect;
 
+const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export class Meal {
   constructor(readonly record: MealRecord) {}
 
-  summaryLabel(): string {
-    return this.record.side_dish
-      ? `${this.record.date}: ${this.record.main_dish} | ${this.record.side_dish}`
-      : `${this.record.date}: ${this.record.main_dish}`;
+  weekdayLabel(): string {
+    const [y, m, d] = this.record.date.split("-").map(Number) as [number, number, number];
+    return WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()] ?? "";
   }
 
-  sideDishLabel(fallback = ""): string {
-    return this.record.side_dish ?? fallback;
+  summaryLabel(): string {
+    const parts = [
+      this.record.main,
+      this.record.rice,
+      this.record.hot_side,
+      this.record.cold_side,
+      this.record.soup,
+    ].filter((dish): dish is string => Boolean(dish));
+    return `${this.record.date}: ${parts.join(" | ")}`;
+  }
+
+  riceLabel(fallback = ""): string {
+    return this.record.rice ?? fallback;
+  }
+
+  hotSideLabel(fallback = ""): string {
+    return this.record.hot_side ?? fallback;
+  }
+
+  coldSideLabel(fallback = ""): string {
+    return this.record.cold_side ?? fallback;
+  }
+
+  soupLabel(fallback = ""): string {
+    return this.record.soup ?? fallback;
   }
 
   isPast(today = Meal.todayString()): boolean {

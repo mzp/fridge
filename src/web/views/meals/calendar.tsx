@@ -64,7 +64,7 @@ const DayCell: FC<{
           href={meal.detailPath()}
           class="text-xs text-emerald-700 hover:underline leading-tight block break-words"
         >
-          {meal.record.main_dish}
+          {meal.record.main}
         </a>
       </td>
     );

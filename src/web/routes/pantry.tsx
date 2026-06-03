@@ -82,14 +82,14 @@ export function createPantryRoutes(db: Db) {
       .orderBy(desc(pantryLogs.recorded_at))
       .all();
     const logDates = [...new Set(logs.map((l) => l.recorded_at))];
-    const mealsByDate: Record<string, { id: number; main_dish: string }> = {};
+    const mealsByDate: Record<string, { id: number; main: string }> = {};
     if (logDates.length > 0) {
       for (const m of db
-        .select({ id: meals.id, date: meals.date, main_dish: meals.main_dish })
+        .select({ id: meals.id, date: meals.date, main: meals.main })
         .from(meals)
         .where(inArray(meals.date, logDates))
         .all()) {
-        mealsByDate[m.date] = { id: m.id, main_dish: m.main_dish };
+        mealsByDate[m.date] = { id: m.id, main: m.main };
       }
     }
     return c.html(

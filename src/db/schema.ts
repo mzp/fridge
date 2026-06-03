@@ -3,8 +3,11 @@ import { int, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 export const meals = sqliteTable("meals", {
   id: int().primaryKey({ autoIncrement: true }),
   date: text().notNull(),
-  main_dish: text().notNull(),
-  side_dish: text(),
+  rice: text(),
+  main: text().notNull(),
+  hot_side: text(),
+  cold_side: text(),
+  soup: text(),
 });
 
 export const pantry = sqliteTable(

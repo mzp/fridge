@@ -19,12 +19,24 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
       <h1 class="page-title mt-2">{item.record.date}</h1>
       <dl class="detail-list">
         <div class="detail-row">
-          <dt class="detail-label w-24">Main dish</dt>
-          <dd>{item.record.main_dish}</dd>
+          <dt class="detail-label w-24">Main</dt>
+          <dd>{item.record.main}</dd>
         </div>
         <div class="detail-row">
-          <dt class="detail-label w-24">Side dish</dt>
-          <dd>{item.sideDishLabel("—")}</dd>
+          <dt class="detail-label w-24">Rice</dt>
+          <dd>{item.riceLabel("—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Hot side</dt>
+          <dd>{item.hotSideLabel("—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Cold side</dt>
+          <dd>{item.coldSideLabel("—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Soup</dt>
+          <dd>{item.soupLabel("—")}</dd>
         </div>
       </dl>
       <div class="flex gap-3">

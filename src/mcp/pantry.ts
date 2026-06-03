@@ -52,7 +52,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
     {
       name: z.string().describe("Item name"),
       quantity: z.number().int().describe("Quantity"),
-      unit: z.string().describe("Unit (e.g. 個, ml, g)").optional(),
+      unit: z.string().describe("Unit (e.g. pcs, ml, g)").optional(),
       stock_date: z
         .string()
         .date()

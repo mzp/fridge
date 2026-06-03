@@ -26,17 +26,17 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
               <tr key={m.record.id} class={`data-table-row ${past ? "is-past" : ""}`}>
                 <td class="pr-4 text-gray-600">
                   <a href={href} class={linkClass}>
-                    {m.record.date}
+                    {m.record.date} ({m.weekdayLabel()})
                   </a>
                 </td>
                 <td class="pr-4">
                   <a href={href} class={linkClass}>
-                    {m.record.main_dish}
+                    {m.record.main}
                   </a>
                 </td>
                 <td class="text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.sideDishLabel()}
+                    {m.hotSideLabel()}
                   </a>
                 </td>
               </tr>
