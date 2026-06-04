@@ -1,6 +1,7 @@
 .DS_Store
 public/dist.css
 db/*.db
+*.bak*
 playwright-report/
 test-results/
 tests/e2e/.auth/
