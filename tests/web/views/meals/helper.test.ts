@@ -1,3 +1,4 @@
+import { mealFixture } from "@test/helpers/meal-fixtures.js";
 import { describe, expect, it } from "vitest";
 import { Meal, type MealRecord } from "@/model/meal.js";
 import {
@@ -10,16 +11,7 @@ import {
 } from "@/web/views/meals/helper.js";
 
 function meal(overrides: Partial<MealRecord> = {}): Meal {
-  return new Meal({
-    id: 1,
-    date: "2026-05-15",
-    rice: null,
-    main: "カレーライス",
-    hot_side: null,
-    cold_side: null,
-    soup: null,
-    ...overrides,
-  });
+  return new Meal(mealFixture(overrides));
 }
 
 describe("meal label helpers", () => {

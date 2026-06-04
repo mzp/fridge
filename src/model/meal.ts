@@ -21,7 +21,8 @@ function buildPatch(dishes: Dishes): Partial<typeof meals.$inferInsert> {
 }
 
 // Outcome of Meal.batchSave: the affected meal, or null when creation was refused.
-export type MealSaveResult =
+// Internal to this module; callers consume it through the inferred return type.
+type MealSaveResult =
   | { action: "created" | "updated" | "unchanged"; meal: Meal }
   | { action: "error"; meal: null };
 

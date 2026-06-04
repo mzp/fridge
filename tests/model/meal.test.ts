@@ -1,19 +1,7 @@
 import { createTestDb } from "@test/helpers/db.js";
+import { mealFixture as meal } from "@test/helpers/meal-fixtures.js";
 import { describe, expect, it } from "vitest";
-import { Meal, type MealRecord } from "@/model/meal.js";
-
-function meal(overrides: Partial<MealRecord> = {}): MealRecord {
-  return {
-    id: 1,
-    date: "2026-05-15",
-    rice: null,
-    main: "カレーライス",
-    hot_side: null,
-    cold_side: null,
-    soup: null,
-    ...overrides,
-  };
-}
+import { Meal } from "@/model/meal.js";
 
 describe("Meal", () => {
   it("serializes to JSON with dishes nested and empty categories omitted", () => {

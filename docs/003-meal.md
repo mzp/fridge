@@ -110,7 +110,6 @@ concrete category.
 
 - `main_dish` / `side_dish` references across the model, MCP tools, web routes/views,
   and tests move to the five category columns.
-- `Meal.summaryLabel()` keeps the `"{date}: {main} | …"` format (main first, then the
-  non-empty categories joined by `" | "`) so existing MCP output and tests stay
-  backward compatible. Per-category label helpers (`riceLabel`, `hotSideLabel`,
-  `coldSideLabel`, `soupLabel`) back the web views.
+- The model exposes the structured meal shape via `Meal.toJson()`, which the MCP tools
+  return as `structuredContent`. Per-category display formatting lives in the web
+  views (`src/web/views/meals/helper.ts`), not on the model.
