@@ -15,11 +15,35 @@ function registerAll(
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
+// Shopping-list rows have stock_date null, so their expiry fields are
+// date-independent and the full payload can be asserted.
+function listItem(overrides: Record<string, unknown>) {
+  return {
+    id: 1,
+    name: "x",
+    quantity: 1,
+    unit: null,
+    stock_date: null,
+    best_before_days: null,
+    status: "in_stock",
+    category: "ingredient",
+    expiry_status: "none",
+    days_remaining: null,
+    ...overrides,
+  };
+}
+
+function pantryNames(result: unknown): string[] {
+  return (
+    result as { structuredContent: { items: Array<{ name: string }> } }
+  ).structuredContent.items.map((i) => i.name);
+}
+
 describe("get_shopping_list", () => {
-  it("returns empty message when list is empty", async () => {
+  it("returns an empty list when nothing is queued", async () => {
     const client = await createTestClient(createTestDb(), registerShoppingTools);
     const res = await client.callTool({ name: "get_shopping_list", arguments: {} });
-    expect(res.content).toEqual([{ type: "text", text: "Shopping list is empty." }]);
+    expect(res.structuredContent).toEqual({ items: [] });
   });
 
   it("lists only items with null stock_date", async () => {
@@ -32,7 +56,7 @@ describe("get_shopping_list", () => {
       .run();
     const client = await createTestClient(db, registerShoppingTools);
     const res = await client.callTool({ name: "get_shopping_list", arguments: {} });
-    expect(res.content).toEqual([{ type: "text", text: "[1] りんご x3" }]);
+    expect(res.structuredContent).toEqual({ items: [listItem({ name: "りんご", quantity: 3 })] });
   });
 });
 
@@ -44,7 +68,12 @@ describe("add_shopping_item", () => {
       name: "add_shopping_item",
       arguments: { name: "牛乳", quantity: 1, unit: "本" },
     });
-    expect(res.content).toEqual([{ type: "text", text: "Added: [1] 牛乳 x1本" }]);
+    expect(res.structuredContent).toEqual({
+      ok: true,
+      action: "created",
+      message: "Added 牛乳 on the shopping list.",
+      item: listItem({ name: "牛乳", quantity: 1, unit: "本" }),
+    });
 
     const rows = db.select().from(schema.pantry).all();
     expect(rows).toHaveLength(1);
@@ -74,7 +103,12 @@ describe("add_shopping_item", () => {
       name: "add_shopping_item",
       arguments: { name: "玉ねぎ", quantity: 1, unit: "個" },
     });
-    expect(res.content).toEqual([{ type: "text", text: "Updated: [1] 玉ねぎ x1個" }]);
+    expect(res.structuredContent).toEqual({
+      ok: true,
+      action: "updated",
+      message: "Updated 玉ねぎ on the shopping list.",
+      item: listItem({ name: "玉ねぎ", quantity: 1, unit: "個" }),
+    });
   });
 });
 
@@ -90,18 +124,27 @@ describe("purchase_shopping_item", () => {
       name: "purchase_shopping_item",
       arguments: { id: 1, best_before_days: 5 },
     });
-    expect(res.content).toEqual([
-      {
-        type: "text",
-        text: `Purchased: [1] 豆腐 x2丁 (stocked: ${TODAY}, best before: 5d)`,
+    expect(res.structuredContent).toMatchObject({
+      ok: true,
+      action: "stocked",
+      message: "Purchased 豆腐 and added it to the pantry.",
+      freshness_tracked: true,
+      item: {
+        id: 1,
+        name: "豆腐",
+        quantity: 2,
+        unit: "丁",
+        stock_date: TODAY,
+        best_before_days: 5,
+        status: "in_stock",
       },
-    ]);
+    });
 
     const shopping = await client.callTool({ name: "get_shopping_list", arguments: {} });
-    expect(shopping.content).toEqual([{ type: "text", text: "Shopping list is empty." }]);
+    expect(shopping.structuredContent).toEqual({ items: [] });
 
     const pantry = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect((pantry.content as Array<{ text: string }>)[0]?.text).toContain("豆腐 x2丁");
+    expect(pantryNames(pantry)).toContain("豆腐");
   });
 
   it("uses stored best_before_days from add_shopping_item", async () => {
@@ -130,9 +173,13 @@ describe("purchase_shopping_item", () => {
       name: "purchase_shopping_item",
       arguments: { id: 1 },
     });
-    expect(res.content).toEqual([
-      { type: "text", text: "Purchased: [1] 醤油 (no freshness tracking)" },
-    ]);
+    expect(res.structuredContent).toMatchObject({
+      ok: true,
+      action: "purchased",
+      message: "Purchased 醤油 (no freshness tracking).",
+      freshness_tracked: false,
+      item: { id: 1, name: "醤油", stock_date: null, status: "purchased" },
+    });
 
     const rows = db.select().from(schema.pantry).all();
     expect(rows).toHaveLength(1);
@@ -140,10 +187,10 @@ describe("purchase_shopping_item", () => {
     expect(rows[0]?.status).toBe("purchased");
 
     const shopping = await client.callTool({ name: "get_shopping_list", arguments: {} });
-    expect(shopping.content).toEqual([{ type: "text", text: "Shopping list is empty." }]);
+    expect(shopping.structuredContent).toEqual({ items: [] });
 
     const pantry = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(pantry.content).toEqual([{ type: "text", text: "No items in stock." }]);
+    expect(pantry.structuredContent).toEqual({ items: [] });
   });
 
   it("merges with an existing pantry row when name + today collide", async () => {
@@ -173,7 +220,13 @@ describe("purchase_shopping_item", () => {
       name: "purchase_shopping_item",
       arguments: { id: 999 },
     });
-    expect(res.content).toEqual([{ type: "text", text: "Shopping item #999 not found." }]);
+    expect(res.structuredContent).toEqual({
+      ok: false,
+      action: "not_found",
+      message: "Shopping item #999 not found.",
+      freshness_tracked: false,
+      item: null,
+    });
   });
 
   it("refuses to purchase a pantry item (not in shopping list)", async () => {
@@ -188,9 +241,13 @@ describe("purchase_shopping_item", () => {
       name: "purchase_shopping_item",
       arguments: { id: inserted.id },
     });
-    expect(res.content).toEqual([
-      { type: "text", text: `Shopping item #${inserted.id} not found.` },
-    ]);
+    expect(res.structuredContent).toEqual({
+      ok: false,
+      action: "not_found",
+      message: `Shopping item #${inserted.id} not found.`,
+      freshness_tracked: false,
+      item: null,
+    });
   });
 });
 
@@ -206,7 +263,13 @@ describe("remove_shopping_item", () => {
       name: "remove_shopping_item",
       arguments: { id: 1 },
     });
-    expect(res.content).toEqual([{ type: "text", text: "Removed: [1] パン" }]);
+    expect(res.structuredContent).toEqual({
+      ok: true,
+      action: "removed",
+      message: "Removed パン from the shopping list.",
+      id: 1,
+      name: "パン",
+    });
     expect(db.select().from(schema.pantry).all()).toHaveLength(0);
   });
 
@@ -222,9 +285,13 @@ describe("remove_shopping_item", () => {
       name: "remove_shopping_item",
       arguments: { id: inserted.id },
     });
-    expect(res.content).toEqual([
-      { type: "text", text: `Shopping item #${inserted.id} not found.` },
-    ]);
+    expect(res.structuredContent).toEqual({
+      ok: false,
+      action: "not_found",
+      message: `Shopping item #${inserted.id} not found.`,
+      id: inserted.id,
+      name: null,
+    });
     expect(db.select().from(schema.pantry).all()).toHaveLength(1);
   });
 });

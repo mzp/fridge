@@ -4,21 +4,8 @@ import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { pantry } from "@/db/schema.js";
 import { loggedTool } from "@/mcp/logged-tool.js";
+import { pantryItemJson } from "@/mcp/pantry.js";
 import { PantryItem } from "@/model/pantry-item.js";
-
-function formatShoppingItem(item: PantryItem): string {
-  return `[${item.record.id}] ${item.record.name} x${item.quantityLabel()}`;
-}
-
-function formatPantryItem(item: PantryItem): string {
-  let line = `[${item.record.id}] ${item.record.name} x${item.quantityLabel()} (stocked: ${item.record.stock_date}`;
-  if (item.record.best_before_days == null) {
-    line += ")";
-  } else {
-    line += `, best before: ${item.record.best_before_days}d)`;
-  }
-  return line;
-}
 
 export function registerShoppingTools(server: McpServer, db: Db) {
   loggedTool(
@@ -26,6 +13,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
     "get_shopping_list",
     "Get the current shopping list (pantry items not yet purchased; stock_date is null).",
     {},
+    { items: z.array(pantryItemJson) },
     () => {
       const items = db
         .select()
@@ -33,10 +21,7 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .where(and(isNull(pantry.stock_date), eq(pantry.status, "in_stock")))
         .all()
         .map((item) => new PantryItem(item));
-      if (items.length === 0) {
-        return { content: [{ type: "text", text: "Shopping list is empty." }] };
-      }
-      return { content: [{ type: "text", text: items.map(formatShoppingItem).join("\n") }] };
+      return { structuredContent: { items: items.map((item) => item.toJson()) } };
     },
   );
 
@@ -60,6 +45,12 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         )
         .optional(),
     },
+    {
+      ok: z.boolean(),
+      action: z.enum(["created", "updated"]),
+      message: z.string(),
+      item: pantryItemJson,
+    },
     ({ name, quantity, unit, best_before_days }) => {
       const existing = db
         .select()
@@ -67,40 +58,38 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .where(and(eq(pantry.name, name), isNull(pantry.stock_date)))
         .get();
 
-      let result: typeof pantry.$inferSelect;
-      let verb: string;
-
-      if (existing) {
-        result = db
-          .update(pantry)
-          .set({
-            quantity,
-            unit: unit ?? existing.unit,
-            best_before_days: best_before_days ?? null,
-          })
-          .where(eq(pantry.id, existing.id))
-          .returning()
-          .get();
-        verb = "Updated";
-      } else {
-        result = db
-          .insert(pantry)
-          .values({
-            name,
-            quantity,
-            unit: unit ?? null,
-            stock_date: null,
-            best_before_days: best_before_days ?? null,
-            status: "in_stock",
-            category: "ingredient",
-          })
-          .returning()
-          .get();
-        verb = "Added";
-      }
+      const result = existing
+        ? db
+            .update(pantry)
+            .set({
+              quantity,
+              unit: unit ?? existing.unit,
+              best_before_days: best_before_days ?? null,
+            })
+            .where(eq(pantry.id, existing.id))
+            .returning()
+            .get()
+        : db
+            .insert(pantry)
+            .values({
+              name,
+              quantity,
+              unit: unit ?? null,
+              stock_date: null,
+              best_before_days: best_before_days ?? null,
+              status: "in_stock",
+              category: "ingredient",
+            })
+            .returning()
+            .get();
 
       return {
-        content: [{ type: "text", text: `${verb}: ${formatShoppingItem(new PantryItem(result))}` }],
+        structuredContent: {
+          ok: true,
+          action: existing ? "updated" : "created",
+          message: `${existing ? "Updated" : "Added"} ${name} on the shopping list.`,
+          item: new PantryItem(result).toJson(),
+        },
       };
     },
   );
@@ -127,6 +116,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .optional(),
       category: z.enum(["ingredient", "prepared"]).describe("Defaults to 'ingredient'.").optional(),
     },
+    {
+      ok: z.boolean(),
+      action: z.enum(["purchased", "stocked", "not_found"]),
+      message: z.string(),
+      freshness_tracked: z.boolean(),
+      item: pantryItemJson.nullable(),
+    },
     ({ id, stock_date, best_before_days, category }) => {
       const today = new Date().toISOString().slice(0, 10);
       const targetDate = stock_date ?? today;
@@ -138,7 +134,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .get();
       if (!item) {
         return {
-          content: [{ type: "text", text: `Shopping item #${id} not found.` }],
+          structuredContent: {
+            ok: false,
+            action: "not_found",
+            message: `Shopping item #${id} not found.`,
+            freshness_tracked: false,
+            item: null,
+          },
         };
       }
 
@@ -152,12 +154,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
           .returning()
           .get();
         return {
-          content: [
-            {
-              type: "text",
-              text: `Purchased: [${result.id}] ${result.name} (no freshness tracking)`,
-            },
-          ],
+          structuredContent: {
+            ok: true,
+            action: "purchased",
+            message: `Purchased ${result.name} (no freshness tracking).`,
+            freshness_tracked: false,
+            item: new PantryItem(result).toJson(),
+          },
         };
       }
 
@@ -190,7 +193,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
       }
 
       return {
-        content: [{ type: "text", text: `Purchased: ${formatPantryItem(new PantryItem(result))}` }],
+        structuredContent: {
+          ok: true,
+          action: "stocked",
+          message: `Purchased ${result.name} and added it to the pantry.`,
+          freshness_tracked: true,
+          item: new PantryItem(result).toJson(),
+        },
       };
     },
   );
@@ -202,6 +211,13 @@ export function registerShoppingTools(server: McpServer, db: Db) {
     {
       id: z.number().int().describe("Shopping item ID (from get_shopping_list)"),
     },
+    {
+      ok: z.boolean(),
+      action: z.enum(["removed", "not_found"]),
+      message: z.string(),
+      id: z.number(),
+      name: z.string().nullable(),
+    },
     ({ id }) => {
       const item = db
         .select()
@@ -210,12 +226,24 @@ export function registerShoppingTools(server: McpServer, db: Db) {
         .get();
       if (!item) {
         return {
-          content: [{ type: "text", text: `Shopping item #${id} not found.` }],
+          structuredContent: {
+            ok: false,
+            action: "not_found",
+            message: `Shopping item #${id} not found.`,
+            id,
+            name: null,
+          },
         };
       }
       db.delete(pantry).where(eq(pantry.id, id)).run();
       return {
-        content: [{ type: "text", text: `Removed: [${id}] ${item.name}` }],
+        structuredContent: {
+          ok: true,
+          action: "removed",
+          message: `Removed ${item.name} from the shopping list.`,
+          id,
+          name: item.name,
+        },
       };
     },
   );
