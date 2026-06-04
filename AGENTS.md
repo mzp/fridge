@@ -120,6 +120,7 @@ Codex should treat these as reusable named workflows when the user asks for them
 
 - `precheck`: follow `.agents/workflows/precheck.md`.
 - `self-review`: follow `.agents/workflows/self-review.md`. With no argument, scan files changed in the last commit. With `all`, scan all files under `src/` and `tests/`.
+- `pull_request`: follow `.agents/workflows/pull_request.md`. Runs precheck and self-review on the current branch, then opens a GitHub pull request.
 
 The shared workflow bodies live under `.agents/workflows/`. Tool-specific entrypoints under `.claude/commands/` and `.codex/prompts/` should only point to those shared files.
 
