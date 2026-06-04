@@ -63,7 +63,7 @@ export function registerMealTools(server: McpServer, db: Db) {
   loggedTool(
     server,
     "set_meal",
-    "Create or update the meal for a date. This is a partial update: only the categories you pass are changed, and any category you omit is left untouched, so existing dishes are preserved. A meal follows the ichiju-sansai structure: a main dish plus optional staple, warm side, cold side, and soup. Assign each dish to the category that fits its role and temperature. Pass an empty string to clear a category. `main` is required only when creating a new meal.",
+    "Create or update the meal for a date. This is a partial update: only the categories you pass are changed, and any category you omit is left untouched, so existing dishes are preserved. A meal follows the ichiju-sansai structure: a main dish plus optional rice, warm side, cold side, and soup. Assign each dish to the category that fits its role and temperature. Pass an empty string to clear a category. `main` is required only when creating a new meal.",
     {
       date: z.string().date().describe("Date of the meal (YYYY-MM-DD)"),
       main: z
@@ -74,9 +74,7 @@ export function registerMealTools(server: McpServer, db: Db) {
         .optional(),
       rice: z
         .string()
-        .describe(
-          "Staple / rice (optional). Set it to the staple dish served with the meal.",
-        )
+        .describe("Rice (optional). Set it to the rice served with the meal.")
         .optional(),
       hot_side: z
         .string()
@@ -92,9 +90,7 @@ export function registerMealTools(server: McpServer, db: Db) {
         .optional(),
       soup: z
         .string()
-        .describe(
-          "Soup (optional). Set it to the soup served with the meal.",
-        )
+        .describe("Soup (optional). Set it to the soup served with the meal.")
         .optional(),
     },
     {

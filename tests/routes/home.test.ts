@@ -32,6 +32,29 @@ describe("GET /", () => {
     expect(html).not.toContain("過去の料理");
   });
 
+  it("shows rice and soup as their own columns; warm/cold sides joined", async () => {
+    const db = createTestDb();
+    const today = new Date().toISOString().slice(0, 10);
+    db.insert(schema.meals)
+      .values({
+        date: today,
+        main: "鮭の塩焼き",
+        rice: "炊き込みご飯",
+        hot_side: "肉じゃが",
+        cold_side: "おひたし",
+        soup: "味噌汁",
+      })
+      .run();
+
+    const html = await (await createHomeApp(db).request("/")).text();
+    expect(html).toContain("Rice");
+    expect(html).toContain("Soup");
+    expect(html).toContain("炊き込みご飯");
+    expect(html).toContain("味噌汁");
+    // Warm and cold sides stay joined with " / " in a single column.
+    expect(html).toContain("肉じゃが / おひたし");
+  });
+
   it("shows shopping-list rows, all prepared dishes, and only urgent ingredients", async () => {
     const db = createTestDb();
     const today = new Date();

@@ -47,6 +47,16 @@ describe("Meal", () => {
     expect(new Meal(meal({ soup: "味噌汁" })).sidesLabel()).toBe("味噌汁");
   });
 
+  it("joins only the warm and cold sides, excluding rice and soup", () => {
+    expect(new Meal(meal()).warmColdSidesLabel("—")).toBe("—");
+    expect(
+      new Meal(
+        meal({ rice: "白米", hot_side: "きんぴら", cold_side: "サラダ", soup: "味噌汁" }),
+      ).warmColdSidesLabel(),
+    ).toBe("きんぴら / サラダ");
+    expect(new Meal(meal({ hot_side: "肉じゃが" })).warmColdSidesLabel()).toBe("肉じゃが");
+  });
+
   it("returns the weekday label for the meal date", () => {
     expect(new Meal(meal({ date: "2026-05-15" })).weekdayLabel()).toBe("Fri");
     expect(new Meal(meal({ date: "2026-05-16" })).weekdayLabel()).toBe("Sat");

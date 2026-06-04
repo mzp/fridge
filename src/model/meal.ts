@@ -60,6 +60,14 @@ export class Meal {
     return sides.length > 0 ? sides.join(separator) : fallback;
   }
 
+  // Just the warm and cold sides (excludes rice and soup), joined for display.
+  warmColdSidesLabel(fallback = "", separator = " / "): string {
+    const sides = [this.record.hot_side, this.record.cold_side].filter((dish): dish is string =>
+      Boolean(dish),
+    );
+    return sides.length > 0 ? sides.join(separator) : fallback;
+  }
+
   isPast(today = Meal.todayString()): boolean {
     return this.record.date < today;
   }

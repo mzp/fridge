@@ -8,7 +8,7 @@ Accepted
 A meal was stored as just two fields: `main_dish` (required) and `side_dish`
 (optional). This cannot express the *ichiju-sansai* framework (one soup, three
 sides) that the planning rules assume — a meal is composed of distinct roles
-(staple, main protein, warm side, cold side, soup), and a single opaque "side dish"
+(rice, main protein, warm side, cold side, soup), and a single opaque "side dish"
 loses that structure.
 
 We want each meal to carry the role of every dish so the web UI, the MCP tools, and
@@ -25,7 +25,7 @@ A meal is split into five role categories, organized on a temperature axis:
 
 | category    | Role        | Includes |
 |-------------|-------------|----------|
-| `rice`      | Staple      | Defaults to plain white rice; donburi / takikomi rice / fried rice when notable |
+| `rice`      | Rice        | Defaults to plain white rice; donburi / takikomi rice / fried rice when notable |
 | `main`      | Main        | Main protein dish (grilled fish, meat, a main-grade salad, etc.) |
 | `hot_side`  | Warm side   | Warm, substantial side — simmered (nimono), stir-fried, sautéed, glacé |
 | `cold_side` | Cold side   | Cold / light side — dressed dishes (aemono), pickles, salad |
@@ -42,7 +42,7 @@ Rationale:
 
 ### The ichiju-sansai template (practical version)
 ```
-Rice (staple, default white rice)
+Rice (default white rice)
 + Soup (default miso soup)
 + 1 main dish
 + 1–2 dishes from warm/cold sides, e.g. from make-ahead stock
