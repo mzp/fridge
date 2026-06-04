@@ -57,22 +57,21 @@ const DayCell: FC<{
   const past = dateStr < today;
   const stateClass = past ? " is-past" : "";
   if (meal) {
+    const sides = meal.sidesLabel();
     return (
       <td class={`calendar-cell${stateClass}`}>
-        <div class="text-xs text-gray-400 mb-1">{day}</div>
-        <a
-          href={meal.detailPath()}
-          class="text-xs text-emerald-700 hover:underline leading-tight block break-words"
-        >
+        <div class="calendar-date">{day}</div>
+        <a href={meal.detailPath()} class="calendar-main">
           {meal.record.main}
+          {sides ? ` / ${sides}` : null}
         </a>
       </td>
     );
   }
   return (
     <td class={`calendar-cell${stateClass}`}>
-      <a href={`/meals/new?date=${dateStr}`} class="block w-full h-full hover:bg-gray-50">
-        <div class="text-xs text-gray-400">{day}</div>
+      <a href={`/meals/new?date=${dateStr}`} class="calendar-add">
+        <div class="calendar-date">{day}</div>
       </a>
     </td>
   );

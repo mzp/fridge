@@ -10,11 +10,13 @@ test("create meal: appears on home and on calendar", async ({ page }) => {
   await page.getByLabel("Date").fill(FUTURE_DATE);
   await page.getByLabel("Main").fill("カレーライス");
   await page.getByLabel("Hot side").fill("きんぴら");
+  await page.getByLabel("Soup").fill("味噌汁");
   await page.getByRole("button", { name: "Save" }).click();
 
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("link", { name: "カレーライス" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "きんぴら" })).toBeVisible();
+  await expect(page.getByText("きんぴら")).toBeVisible();
+  await expect(page.getByText("味噌汁")).toBeVisible();
 
   await page.goto(`/meals?month=${FUTURE_DATE.slice(0, 7)}`);
   await expect(page.getByRole("link", { name: "カレーライス" })).toBeVisible();

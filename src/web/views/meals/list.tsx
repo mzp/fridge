@@ -14,7 +14,7 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
           <tr class="data-table-head">
             <th class="data-table-heading">Date</th>
             <th class="data-table-heading">Main</th>
-            <th class="data-table-heading">Side</th>
+            <th class="data-table-heading">Sides &amp; soup</th>
           </tr>
         </thead>
         <tbody>
@@ -36,7 +36,7 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
                 </td>
                 <td class="text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.hotSideLabel()}
+                    {m.sidesLabel()}
                   </a>
                 </td>
               </tr>
