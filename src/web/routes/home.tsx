@@ -2,6 +2,7 @@ import { and, eq, gte, isNotNull, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { daysBeforeToday, todayString } from "@/lib/date.js";
 import { Meal } from "@/model/meal.js";
 import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
@@ -13,8 +14,8 @@ export function createHomeRoutes(db: Db) {
   const app = new Hono();
 
   app.get("/", (c) => {
-    const today = Meal.todayString();
-    const twoDaysAgo = Meal.daysBeforeToday(2);
+    const today = todayString();
+    const twoDaysAgo = daysBeforeToday(2);
     const mealResults = db
       .select()
       .from(meals)

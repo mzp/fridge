@@ -1,4 +1,4 @@
-import { Meal } from "@/model/meal.js";
+import { daysBeforeToday, todayString } from "@/lib/date.js";
 
 const RESET_URL = "http://localhost:3001/__test__/reset";
 
@@ -9,5 +9,5 @@ export async function resetDb(): Promise<void> {
   }
 }
 
-export const TODAY = Meal.todayString();
-export const FUTURE_DATE = Meal.daysBeforeToday(-365);
+export const TODAY = todayString();
+export const FUTURE_DATE = daysBeforeToday(-365);

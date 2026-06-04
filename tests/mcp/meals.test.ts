@@ -3,21 +3,6 @@ import { createTestClient } from "@test/helpers/mcp.js";
 import { describe, expect, it } from "vitest";
 import { registerMealTools } from "@/mcp/meals.js";
 
-// Full meal payload; weekday is derived from the date.
-function meal(overrides: Record<string, unknown>) {
-  return {
-    id: 1,
-    date: "2026-05-15",
-    weekday: "Fri",
-    main: "カレーライス",
-    rice: null,
-    hot_side: null,
-    cold_side: null,
-    soup: null,
-    ...overrides,
-  };
-}
-
 describe("get_meals", () => {
   it("returns meals set via set_meal within the date range", async () => {
     const client = await createTestClient(createTestDb(), registerMealTools);
@@ -42,14 +27,13 @@ describe("get_meals", () => {
 
     expect(result.structuredContent).toEqual({
       meals: [
-        meal({}),
-        meal({
+        { id: 1, date: "2026-05-15", weekday: "Fri", dishes: { main: "カレーライス" } },
+        {
           id: 2,
           date: "2026-05-16",
           weekday: "Sat",
-          main: "肉じゃが",
-          cold_side: "ほうれん草のおひたし",
-        }),
+          dishes: { main: "肉じゃが", cold_side: "ほうれん草のおひたし" },
+        },
       ],
     });
   });
@@ -81,7 +65,7 @@ describe("get_meals", () => {
       ok: true,
       action: "created",
       message: "Added meal for 2026-05-15.",
-      meal: meal({}),
+      meal: { id: 1, date: "2026-05-15", weekday: "Fri", dishes: { main: "カレーライス" } },
     });
 
     const updated = await client.callTool({
@@ -92,7 +76,12 @@ describe("get_meals", () => {
       ok: true,
       action: "updated",
       message: "Updated meal for 2026-05-15.",
-      meal: meal({ main: "ビーフカレー", cold_side: "サラダ" }),
+      meal: {
+        id: 1,
+        date: "2026-05-15",
+        weekday: "Fri",
+        dishes: { main: "ビーフカレー", cold_side: "サラダ" },
+      },
     });
 
     const result = await client.callTool({
@@ -101,7 +90,14 @@ describe("get_meals", () => {
     });
 
     expect(result.structuredContent).toEqual({
-      meals: [meal({ main: "ビーフカレー", cold_side: "サラダ" })],
+      meals: [
+        {
+          id: 1,
+          date: "2026-05-15",
+          weekday: "Fri",
+          dishes: { main: "ビーフカレー", cold_side: "サラダ" },
+        },
+      ],
     });
   });
 
@@ -122,7 +118,12 @@ describe("get_meals", () => {
       ok: true,
       action: "updated",
       message: "Updated meal for 2026-05-15.",
-      meal: meal({ main: "鮭の塩焼き", cold_side: "ほうれん草のおひたし", soup: "味噌汁" }),
+      meal: {
+        id: 1,
+        date: "2026-05-15",
+        weekday: "Fri",
+        dishes: { main: "鮭の塩焼き", cold_side: "ほうれん草のおひたし", soup: "味噌汁" },
+      },
     });
   });
 
@@ -141,7 +142,7 @@ describe("get_meals", () => {
       ok: true,
       action: "updated",
       message: "Updated meal for 2026-05-15.",
-      meal: meal({ main: "鮭の塩焼き" }),
+      meal: { id: 1, date: "2026-05-15", weekday: "Fri", dishes: { main: "鮭の塩焼き" } },
     });
   });
 
@@ -177,7 +178,7 @@ describe("delete_meal", () => {
       ok: true,
       action: "deleted",
       message: "Deleted meal for 2026-05-15.",
-      meal: meal({}),
+      meal: { id: 1, date: "2026-05-15", weekday: "Fri", dishes: { main: "カレーライス" } },
     });
 
     const list = await client.callTool({

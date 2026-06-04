@@ -4,38 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/db/index.js";
 import { meals } from "@/db/schema.js";
 import { loggedTool } from "@/mcp/logged-tool.js";
-import { Meal } from "@/model/meal.js";
-
-type MealDishes = {
-  main?: string | undefined;
-  rice?: string | undefined;
-  hot_side?: string | undefined;
-  cold_side?: string | undefined;
-  soup?: string | undefined;
-};
-
-const mealJson = z.object({
-  id: z.number(),
-  date: z.string(),
-  weekday: z.string(),
-  main: z.string(),
-  rice: z.string().nullable(),
-  hot_side: z.string().nullable(),
-  cold_side: z.string().nullable(),
-  soup: z.string().nullable(),
-});
-
-// Build a partial update from only the categories the caller passed.
-// Omitted categories are left out (so they keep their value); "" clears one.
-function buildMealPatch(dishes: MealDishes): Partial<typeof meals.$inferInsert> {
-  const patch: Partial<typeof meals.$inferInsert> = {};
-  if (dishes.main !== undefined) patch.main = dishes.main;
-  for (const key of ["rice", "hot_side", "cold_side", "soup"] as const) {
-    const value = dishes[key];
-    if (value !== undefined) patch[key] = value === "" ? null : value;
-  }
-  return patch;
-}
+import { Meal, mealJson } from "@/model/meal.js";
 
 export function registerMealTools(server: McpServer, db: Db) {
   loggedTool(
@@ -100,62 +69,19 @@ export function registerMealTools(server: McpServer, db: Db) {
       meal: mealJson.nullable(),
     },
     ({ date, main, rice, hot_side, cold_side, soup }) => {
-      const patch = buildMealPatch({ main, rice, hot_side, cold_side, soup });
-      const existing = db.select().from(meals).where(eq(meals.date, date)).get();
-      if (existing) {
-        if (Object.keys(patch).length === 0) {
-          return {
-            structuredContent: {
-              ok: true,
-              action: "unchanged",
-              message: `No changes; meal for ${date} is unchanged.`,
-              meal: new Meal(existing).toJson(),
-            },
-          };
-        }
-        const updated = db
-          .update(meals)
-          .set(patch)
-          .where(eq(meals.id, existing.id))
-          .returning()
-          .get();
-        return {
-          structuredContent: {
-            ok: true,
-            action: "updated",
-            message: `Updated meal for ${date}.`,
-            meal: new Meal(updated).toJson(),
-          },
-        };
-      }
-      if (main === undefined) {
-        return {
-          structuredContent: {
-            ok: false,
-            action: "error",
-            message: `Cannot create a meal for ${date} without a main dish.`,
-            meal: null,
-          },
-        };
-      }
-      const inserted = db
-        .insert(meals)
-        .values({
-          date,
-          main,
-          rice: rice ?? null,
-          hot_side: hot_side ?? null,
-          cold_side: cold_side ?? null,
-          soup: soup ?? null,
-        })
-        .returning()
-        .get();
+      const result = Meal.batchSave(db, date, { main, rice, hot_side, cold_side, soup });
+      const messages = {
+        created: `Added meal for ${date}.`,
+        updated: `Updated meal for ${date}.`,
+        unchanged: `No changes; meal for ${date} is unchanged.`,
+        error: `Cannot create a meal for ${date} without a main dish.`,
+      } as const;
       return {
         structuredContent: {
-          ok: true,
-          action: "created",
-          message: `Added meal for ${date}.`,
-          meal: new Meal(inserted).toJson(),
+          ok: result.action !== "error",
+          action: result.action,
+          message: messages[result.action],
+          meal: result.meal ? result.meal.toJson() : null,
         },
       };
     },

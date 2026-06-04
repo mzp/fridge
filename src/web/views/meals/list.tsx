@@ -1,5 +1,6 @@
 import type { FC } from "hono/jsx";
 import type { Meal } from "@/model/meal.js";
+import { riceLabel, soupLabel, warmColdSidesLabel } from "@/web/views/meals/helper.js";
 
 export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }) => (
   <section>
@@ -38,17 +39,17 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
                 </td>
                 <td class="pr-4 text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.riceLabel()}
+                    {riceLabel(m)}
                   </a>
                 </td>
                 <td class="pr-4 text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.warmColdSidesLabel()}
+                    {warmColdSidesLabel(m)}
                   </a>
                 </td>
                 <td class="text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.soupLabel()}
+                    {soupLabel(m)}
                   </a>
                 </td>
               </tr>

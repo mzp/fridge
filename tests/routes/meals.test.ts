@@ -2,7 +2,7 @@ import { createTestDb } from "@test/helpers/db.js";
 import { mountRoute } from "@test/helpers/routes.js";
 import { describe, expect, it } from "vitest";
 import { meals } from "@/db/schema.js";
-import { Meal } from "@/model/meal.js";
+import { todayString } from "@/lib/date.js";
 import { createMealRoutes } from "@/web/routes/meals.js";
 
 const MONTH_NAMES = [
@@ -30,7 +30,7 @@ describe("GET /meals", () => {
     const res = await createMealApp(db).request("/meals");
     expect(res.status).toBe(200);
     const html = await res.text();
-    const [year, month] = Meal.todayString().split("-").map(Number) as [number, number];
+    const [year, month] = todayString().split("-").map(Number) as [number, number];
     expect(html).toContain(`${MONTH_NAMES[month - 1]} ${year}`);
   });
 
@@ -46,7 +46,7 @@ describe("GET /meals", () => {
     const db = createTestDb();
     db.insert(meals)
       .values({
-        date: Meal.todayString(),
+        date: todayString(),
         main: "鮭の塩焼き",
         hot_side: "肉じゃが",
         soup: "味噌汁",

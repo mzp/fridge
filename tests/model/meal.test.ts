@@ -15,46 +15,13 @@ function meal(overrides: Partial<MealRecord> = {}): MealRecord {
 }
 
 describe("Meal", () => {
-  it("formats meal summaries with each dish labeled by category", () => {
-    expect(new Meal(meal()).summaryLabel()).toBe("2026-05-15: main=カレーライス");
-    expect(new Meal(meal({ hot_side: "きんぴら" })).summaryLabel()).toBe(
-      "2026-05-15: main=カレーライス, hot_side=きんぴら",
-    );
-    expect(
-      new Meal(
-        meal({ rice: "白米", hot_side: "きんぴら", cold_side: "おひたし", soup: "味噌汁" }),
-      ).summaryLabel(),
-    ).toBe(
-      "2026-05-15: main=カレーライス, rice=白米, hot_side=きんぴら, cold_side=おひたし, soup=味噌汁",
-    );
-  });
-
-  it("provides category dish labels with a fallback", () => {
-    expect(new Meal(meal()).hotSideLabel("—")).toBe("—");
-    expect(new Meal(meal({ hot_side: "きんぴら" })).hotSideLabel("—")).toBe("きんぴら");
-    expect(new Meal(meal({ rice: "白米" })).riceLabel("—")).toBe("白米");
-    expect(new Meal(meal({ cold_side: "サラダ" })).coldSideLabel("—")).toBe("サラダ");
-    expect(new Meal(meal({ soup: "味噌汁" })).soupLabel("—")).toBe("味噌汁");
-  });
-
-  it("joins all sides and soup for the dashboard, with a fallback when empty", () => {
-    expect(new Meal(meal()).sidesLabel("—")).toBe("—");
-    expect(
-      new Meal(
-        meal({ rice: "白米", hot_side: "きんぴら", cold_side: "サラダ", soup: "味噌汁" }),
-      ).sidesLabel(),
-    ).toBe("白米 / きんぴら / サラダ / 味噌汁");
-    expect(new Meal(meal({ soup: "味噌汁" })).sidesLabel()).toBe("味噌汁");
-  });
-
-  it("joins only the warm and cold sides, excluding rice and soup", () => {
-    expect(new Meal(meal()).warmColdSidesLabel("—")).toBe("—");
-    expect(
-      new Meal(
-        meal({ rice: "白米", hot_side: "きんぴら", cold_side: "サラダ", soup: "味噌汁" }),
-      ).warmColdSidesLabel(),
-    ).toBe("きんぴら / サラダ");
-    expect(new Meal(meal({ hot_side: "肉じゃが" })).warmColdSidesLabel()).toBe("肉じゃが");
+  it("serializes to JSON with dishes nested and empty categories omitted", () => {
+    expect(new Meal(meal({ id: 3, main: "鮭の塩焼き", hot_side: "肉じゃが" })).toJson()).toEqual({
+      id: 3,
+      date: "2026-05-15",
+      weekday: "Fri",
+      dishes: { main: "鮭の塩焼き", hot_side: "肉じゃが" },
+    });
   });
 
   it("returns the weekday label for the meal date", () => {
@@ -74,12 +41,5 @@ describe("Meal", () => {
     expect(model.detailPath()).toBe("/meals/12");
     expect(model.editPath()).toBe("/meals/12/edit");
     expect(model.deletePath()).toBe("/meals/12/delete");
-  });
-
-  it("formats dates for today and relative cutoffs", () => {
-    const now = new Date("2026-05-16T12:00:00.000Z");
-
-    expect(Meal.todayString(now)).toBe("2026-05-16");
-    expect(Meal.daysBeforeToday(2, now)).toBe("2026-05-14");
   });
 });

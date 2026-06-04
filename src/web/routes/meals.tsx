@@ -2,6 +2,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { todayString } from "@/lib/date.js";
 import { logger } from "@/logger/web.js";
 import { Meal } from "@/model/meal.js";
 import { Layout } from "@/web/views/layout.js";
@@ -17,7 +18,7 @@ export function createMealRoutes(db: Db) {
   const app = new Hono();
 
   app.get("/", (c) => {
-    const today = Meal.todayString();
+    const today = todayString();
     const monthParam = c.req.query("month") ?? today.slice(0, 7);
     const [year, month] = monthParam.split("-").map(Number) as [number, number];
     const from = `${monthParam}-01`;

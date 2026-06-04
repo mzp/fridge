@@ -1,5 +1,7 @@
 import type { FC } from "hono/jsx";
-import { Meal } from "@/model/meal.js";
+import { todayString } from "@/lib/date.js";
+import type { Meal } from "@/model/meal.js";
+import { sidesLabel } from "@/web/views/meals/helper.js";
 
 const MONTH_NAMES = [
   "January",
@@ -57,7 +59,7 @@ const DayCell: FC<{
   const past = dateStr < today;
   const stateClass = past ? " is-past" : "";
   if (meal) {
-    const sides = meal.sidesLabel();
+    const sides = sidesLabel(meal);
     return (
       <td class={`calendar-cell${stateClass}`}>
         <div class="calendar-date">{day}</div>
@@ -82,7 +84,7 @@ export const MealsCalendar: FC<{ meals: Meal[]; year: number; month: number }> =
   year,
   month,
 }) => {
-  const today = Meal.todayString();
+  const today = todayString();
   const mealMap = new Map(meals.map((m) => [m.record.date, m]));
   const weeks = buildWeeks(year, month);
   const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
