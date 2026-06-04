@@ -75,25 +75,25 @@ export function registerMealTools(server: McpServer, db: Db) {
       rice: z
         .string()
         .describe(
-          "Staple / rice (optional). Defaults to plain white rice when omitted; set it only for notable staples like donburi, takikomi-gohan, or fried rice.",
+          "Staple / rice (optional). Set it to the staple dish served with the meal.",
         )
         .optional(),
       hot_side: z
         .string()
         .describe(
-          "Warm side dish (optional): a warm, substantial side such as a simmered dish (nimono), stir-fry, sauté, or glacé. Goes here rather than cold_side when it is served warm.",
+          "Warm side dish (optional): a warm, substantial side. Goes here rather than cold_side when it is served warm.",
         )
         .optional(),
       cold_side: z
         .string()
         .describe(
-          "Cold side dish (optional): a cold or light side such as a dressed dish (aemono), pickles, or a salad. Use this rather than hot_side for chilled or raw items.",
+          "Cold side dish (optional): a cold or light side. Use this rather than hot_side for chilled or raw items.",
         )
         .optional(),
       soup: z
         .string()
         .describe(
-          "Soup (optional). Defaults to miso soup when omitted; set it for other soups like tonjiru, pot-au-feu, or corn soup.",
+          "Soup (optional). Set it to the soup served with the meal.",
         )
         .optional(),
     },
