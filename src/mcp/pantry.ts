@@ -6,25 +6,27 @@ import { pantry, pantryLogs } from "@/db/schema.js";
 import { loggedTool } from "@/mcp/logged-tool.js";
 import { PantryItem } from "@/model/pantry-item.js";
 
-function formatItem(item: PantryItem): string {
-  let line = `[${item.record.id}] ${item.record.name} x${item.quantityLabel()} (stocked: ${item.record.stock_date}`;
-  if (item.record.best_before_days == null) {
-    line += ")";
-  } else {
-    line += `, best before: ${item.record.best_before_days}d)`;
-    const status = item.expiryStatus();
-    if (status === "expired") line += " [!] expired";
-    else if (status === "soon") line += " [!] expires soon";
-  }
-  return line;
-}
+// Shared output shape for a pantry/shopping row, including derived expiry fields.
+export const pantryItemJson = z.object({
+  id: z.number(),
+  name: z.string(),
+  quantity: z.number(),
+  unit: z.string().nullable(),
+  stock_date: z.string().nullable(),
+  best_before_days: z.number().nullable(),
+  status: z.string(),
+  category: z.string(),
+  expiry_status: z.enum(["none", "expired", "soon", "fresh"]),
+  days_remaining: z.number().nullable(),
+});
 
 export function registerPantryTools(server: McpServer, db: Db) {
   loggedTool(
     server,
     "get_pantry",
-    "Get the list of in-stock pantry items with IDs and expiry warnings",
+    "Get the list of in-stock pantry items with IDs and expiry status. Each item carries `category` ('prepared' or 'ingredient'), `expiry_status` and `days_remaining` for freshness.",
     {},
+    { items: z.array(pantryItemJson) },
     () => {
       const items = db
         .select()
@@ -32,16 +34,13 @@ export function registerPantryTools(server: McpServer, db: Db) {
         .where(and(eq(pantry.status, "in_stock"), isNotNull(pantry.stock_date)))
         .all()
         .map((item) => new PantryItem(item));
-      if (items.length === 0) {
-        return { content: [{ type: "text", text: "No items in stock." }] };
-      }
       const prepared = items.filter((i) => i.belongsToCategory("prepared"));
       const ingredients = items.filter((i) => i.belongsToCategory("ingredient"));
-      const sections: string[] = [];
-      if (prepared.length > 0) sections.push(`[prepared]\n${prepared.map(formatItem).join("\n")}`);
-      if (ingredients.length > 0)
-        sections.push(`[ingredient]\n${ingredients.map(formatItem).join("\n")}`);
-      return { content: [{ type: "text", text: sections.join("\n\n") }] };
+      return {
+        structuredContent: {
+          items: [...prepared, ...ingredients].map((item) => item.toJson()),
+        },
+      };
     },
   );
 
@@ -52,7 +51,7 @@ export function registerPantryTools(server: McpServer, db: Db) {
     {
       name: z.string().describe("Item name"),
       quantity: z.number().int().describe("Quantity"),
-      unit: z.string().describe("Unit (e.g. 個, ml, g)").optional(),
+      unit: z.string().describe("Unit (e.g. pcs, ml, g)").optional(),
       stock_date: z
         .string()
         .date()
@@ -66,6 +65,12 @@ export function registerPantryTools(server: McpServer, db: Db) {
           "'ingredient' for raw ingredients (default), 'prepared' for ready-to-eat dishes (e.g. soup, side dish)",
         )
         .optional(),
+    },
+    {
+      ok: z.boolean(),
+      action: z.enum(["created", "updated"]),
+      message: z.string(),
+      item: pantryItemJson,
     },
     ({ name, quantity, unit, stock_date, best_before_days, category }) => {
       const existing = db
@@ -84,19 +89,17 @@ export function registerPantryTools(server: McpServer, db: Db) {
         category: category ?? existing?.category ?? "ingredient",
       };
 
-      let result: typeof pantry.$inferSelect;
-      let verb: string;
-
-      if (existing) {
-        result = db.update(pantry).set(values).where(eq(pantry.id, existing.id)).returning().get();
-        verb = "Updated";
-      } else {
-        result = db.insert(pantry).values(values).returning().get();
-        verb = "Added";
-      }
+      const result = existing
+        ? db.update(pantry).set(values).where(eq(pantry.id, existing.id)).returning().get()
+        : db.insert(pantry).values(values).returning().get();
 
       return {
-        content: [{ type: "text", text: `${verb}: ${formatItem(new PantryItem(result))}` }],
+        structuredContent: {
+          ok: true,
+          action: existing ? "updated" : "created",
+          message: `${existing ? "Updated" : "Added"} ${name} (${stock_date}).`,
+          item: new PantryItem(result).toJson(),
+        },
       };
     },
   );
@@ -120,11 +123,34 @@ export function registerPantryTools(server: McpServer, db: Db) {
         .describe('Optional note, e.g. fractional amount used ("1/4 of one").')
         .optional(),
     },
+    {
+      ok: z.boolean(),
+      action: z.enum(["used", "not_found"]),
+      message: z.string(),
+      id: z.number(),
+      name: z.string().nullable(),
+      used: z.number(),
+      remaining: z.number(),
+      unit: z.string().nullable(),
+      consumed: z.boolean(),
+    },
     ({ id, quantity_used, use_all, date, note }) => {
       const today = new Date().toISOString().slice(0, 10);
       const item = db.select().from(pantry).where(eq(pantry.id, id)).get();
       if (!item) {
-        return { content: [{ type: "text", text: `Item #${id} not found.` }] };
+        return {
+          structuredContent: {
+            ok: false,
+            action: "not_found",
+            message: `Item #${id} not found.`,
+            id,
+            name: null,
+            used: 0,
+            remaining: 0,
+            unit: null,
+            consumed: false,
+          },
+        };
       }
 
       const pantryItem = new PantryItem(item);
@@ -144,10 +170,22 @@ export function registerPantryTools(server: McpServer, db: Db) {
         })
         .run();
 
-      let msg = `Used ${pantryItem.quantityLabel(consumption.actualUsed)} of ${pantryItem.record.name}. Remaining: ${pantryItem.quantityLabel(consumption.newQuantity)}.`;
-      if (consumption.consumed) msg += " Marked as consumed.";
+      let message = `Used ${pantryItem.quantityLabel(consumption.actualUsed)} of ${pantryItem.record.name}. Remaining: ${pantryItem.quantityLabel(consumption.newQuantity)}.`;
+      if (consumption.consumed) message += " Marked as consumed.";
 
-      return { content: [{ type: "text", text: msg }] };
+      return {
+        structuredContent: {
+          ok: true,
+          action: "used",
+          message,
+          id,
+          name: pantryItem.record.name,
+          used: consumption.actualUsed,
+          remaining: consumption.newQuantity,
+          unit: pantryItem.record.unit,
+          consumed: consumption.consumed,
+        },
+      };
     },
   );
 }

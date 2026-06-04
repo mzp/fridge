@@ -4,6 +4,24 @@ import { describe, expect, it } from "vitest";
 import * as schema from "@/db/schema.js";
 import { registerPantryTools } from "@/mcp/pantry.js";
 
+// A pantry item with no best_before_days has deterministic (date-independent)
+// expiry fields, so tests can assert the full structured payload.
+function item(overrides: Record<string, unknown>) {
+  return {
+    id: 1,
+    name: "卵",
+    quantity: 6,
+    unit: "個",
+    stock_date: "2026-05-15",
+    best_before_days: null,
+    status: "in_stock",
+    category: "ingredient",
+    expiry_status: "none",
+    days_remaining: null,
+    ...overrides,
+  };
+}
+
 describe("set_pantry_item", () => {
   it("adds a new item and reads it back via get_pantry", async () => {
     const client = await createTestClient(createTestDb(), registerPantryTools);
@@ -12,14 +30,15 @@ describe("set_pantry_item", () => {
       name: "set_pantry_item",
       arguments: { name: "卵", quantity: 6, unit: "個", stock_date: "2026-05-15" },
     });
-    expect(added.content).toEqual([
-      { type: "text", text: "Added: [1] 卵 x6個 (stocked: 2026-05-15)" },
-    ]);
+    expect(added.structuredContent).toEqual({
+      ok: true,
+      action: "created",
+      message: "Added 卵 (2026-05-15).",
+      item: item({}),
+    });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([
-      { type: "text", text: "[ingredient]\n[1] 卵 x6個 (stocked: 2026-05-15)" },
-    ]);
+    expect(list.structuredContent).toEqual({ items: [item({})] });
   });
 
   it("updates an existing item (same name, same stock_date)", async () => {
@@ -33,9 +52,12 @@ describe("set_pantry_item", () => {
       name: "set_pantry_item",
       arguments: { name: "牛乳", quantity: 2, stock_date: "2026-05-15" },
     });
-    expect(updated.content).toEqual([
-      { type: "text", text: "Updated: [1] 牛乳 x2 (stocked: 2026-05-15)" },
-    ]);
+    expect(updated.structuredContent).toEqual({
+      ok: true,
+      action: "updated",
+      message: "Updated 牛乳 (2026-05-15).",
+      item: item({ name: "牛乳", quantity: 2, unit: null }),
+    });
   });
 
   it("excludes shopping-list entries (stock_date is null) from get_pantry", async () => {
@@ -49,9 +71,10 @@ describe("set_pantry_item", () => {
     const client = await createTestClient(db, registerPantryTools);
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    const text = (list.content as Array<{ text: string }>)[0]?.text ?? "";
-    expect(text).toContain("卵 x6個");
-    expect(text).not.toContain("りんご");
+    const names = (list.structuredContent as { items: Array<{ name: string }> }).items.map(
+      (i) => i.name,
+    );
+    expect(names).toEqual(["卵"]);
   });
 
   it("treats same name with different stock_date as separate batches", async () => {
@@ -67,9 +90,12 @@ describe("set_pantry_item", () => {
     });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    const text = (list.content as Array<{ type: string; text: string }>)[0]?.text ?? "";
-    expect(text).toContain("鮭 x5切れ (stocked: 2026-05-10)");
-    expect(text).toContain("鮭 x3切れ (stocked: 2026-05-18)");
+    expect(list.structuredContent).toEqual({
+      items: [
+        item({ id: 1, name: "鮭", quantity: 5, unit: "切れ", stock_date: "2026-05-10" }),
+        item({ id: 2, name: "鮭", quantity: 3, unit: "切れ", stock_date: "2026-05-18" }),
+      ],
+    });
   });
 });
 
@@ -85,12 +111,20 @@ describe("use_pantry_item", () => {
       name: "use_pantry_item",
       arguments: { id: 1, quantity_used: 2, note: "スクランブルエッグ" },
     });
-    expect(result.content).toEqual([{ type: "text", text: "Used 2個 of 卵. Remaining: 4個." }]);
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      action: "used",
+      message: "Used 2個 of 卵. Remaining: 4個.",
+      id: 1,
+      name: "卵",
+      used: 2,
+      remaining: 4,
+      unit: "個",
+      consumed: false,
+    });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([
-      { type: "text", text: "[ingredient]\n[1] 卵 x4個 (stocked: 2026-05-15)" },
-    ]);
+    expect(list.structuredContent).toEqual({ items: [item({ quantity: 4 })] });
   });
 
   it("marks item as consumed when all quantity is used", async () => {
@@ -104,12 +138,20 @@ describe("use_pantry_item", () => {
       name: "use_pantry_item",
       arguments: { id: 1, quantity_used: 2 },
     });
-    expect(result.content).toEqual([
-      { type: "text", text: "Used 2 of 卵. Remaining: 0. Marked as consumed." },
-    ]);
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      action: "used",
+      message: "Used 2 of 卵. Remaining: 0. Marked as consumed.",
+      id: 1,
+      name: "卵",
+      used: 2,
+      remaining: 0,
+      unit: null,
+      consumed: true,
+    });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([{ type: "text", text: "No items in stock." }]);
+    expect(list.structuredContent).toEqual({ items: [] });
   });
 
   it("uses all remaining stock when use_all is true", async () => {
@@ -123,12 +165,20 @@ describe("use_pantry_item", () => {
       name: "use_pantry_item",
       arguments: { id: 1, use_all: true, note: "飲み切り" },
     });
-    expect(result.content).toEqual([
-      { type: "text", text: "Used 3本 of 牛乳. Remaining: 0本. Marked as consumed." },
-    ]);
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      action: "used",
+      message: "Used 3本 of 牛乳. Remaining: 0本. Marked as consumed.",
+      id: 1,
+      name: "牛乳",
+      used: 3,
+      remaining: 0,
+      unit: "本",
+      consumed: true,
+    });
 
     const list = await client.callTool({ name: "get_pantry", arguments: {} });
-    expect(list.content).toEqual([{ type: "text", text: "No items in stock." }]);
+    expect(list.structuredContent).toEqual({ items: [] });
   });
 
   it("returns not found for unknown ID", async () => {
@@ -138,6 +188,16 @@ describe("use_pantry_item", () => {
       name: "use_pantry_item",
       arguments: { id: 999, quantity_used: 1 },
     });
-    expect(result.content).toEqual([{ type: "text", text: "Item #999 not found." }]);
+    expect(result.structuredContent).toEqual({
+      ok: false,
+      action: "not_found",
+      message: "Item #999 not found.",
+      id: 999,
+      name: null,
+      used: 0,
+      remaining: 0,
+      unit: null,
+      consumed: false,
+    });
   });
 });

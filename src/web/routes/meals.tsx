@@ -2,6 +2,7 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Db } from "@/db/index.js";
 import { meals, pantry, pantryLogs } from "@/db/schema.js";
+import { todayString } from "@/lib/date.js";
 import { logger } from "@/logger/web.js";
 import { Meal } from "@/model/meal.js";
 import { Layout } from "@/web/views/layout.js";
@@ -17,7 +18,7 @@ export function createMealRoutes(db: Db) {
   const app = new Hono();
 
   app.get("/", (c) => {
-    const today = Meal.todayString();
+    const today = todayString();
     const monthParam = c.req.query("month") ?? today.slice(0, 7);
     const [year, month] = monthParam.split("-").map(Number) as [number, number];
     const from = `${monthParam}-01`;
@@ -51,15 +52,27 @@ export function createMealRoutes(db: Db) {
   app.post("/", async (c) => {
     const body = await c.req.parseBody();
     const date = String(body["date"]);
-    const main_dish = String(body["main_dish"]);
-    const side_dish = body["side_dish"] ? String(body["side_dish"]) : null;
+    const main = String(body["main"]);
+    const dishes = {
+      rice: body["rice"] ? String(body["rice"]) : null,
+      hot_side: body["hot_side"] ? String(body["hot_side"]) : null,
+      cold_side: body["cold_side"] ? String(body["cold_side"]) : null,
+      soup: body["soup"] ? String(body["soup"]) : null,
+    };
     const existing = db.select().from(meals).where(eq(meals.date, date)).get();
     if (existing) {
-      db.update(meals).set({ main_dish, side_dish }).where(eq(meals.id, existing.id)).run();
-      logger.info({ id: existing.id, date, main_dish }, "meal_updated");
+      db.update(meals)
+        .set({ main, ...dishes })
+        .where(eq(meals.id, existing.id))
+        .run();
+      logger.info({ id: existing.id, date, main }, "meal_updated");
     } else {
-      const inserted = db.insert(meals).values({ date, main_dish, side_dish }).returning().get();
-      logger.info({ id: inserted.id, date, main_dish }, "meal_created");
+      const inserted = db
+        .insert(meals)
+        .values({ date, main, ...dishes })
+        .returning()
+        .get();
+      logger.info({ id: inserted.id, date, main }, "meal_created");
     }
     return c.redirect("/");
   });
@@ -116,8 +129,11 @@ export function createMealRoutes(db: Db) {
     db.update(meals)
       .set({
         date: String(body["date"]),
-        main_dish: String(body["main_dish"]),
-        side_dish: body["side_dish"] ? String(body["side_dish"]) : null,
+        main: String(body["main"]),
+        rice: body["rice"] ? String(body["rice"]) : null,
+        hot_side: body["hot_side"] ? String(body["hot_side"]) : null,
+        cold_side: body["cold_side"] ? String(body["cold_side"]) : null,
+        soup: body["soup"] ? String(body["soup"]) : null,
       })
       .where(eq(meals.id, id))
       .run();

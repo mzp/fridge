@@ -1,4 +1,5 @@
 import type { pantry } from "@/db/schema.js";
+import { pick } from "@/lib/pick.js";
 
 const MS_PER_DAY = 86400000;
 const EXPIRES_SOON_DAYS = 3;
@@ -16,6 +17,24 @@ export type ConsumeResult = {
 
 export class PantryItem {
   constructor(readonly record: PantryItemRecord) {}
+
+  toJson(today = new Date()) {
+    return {
+      ...pick(
+        this.record,
+        "id",
+        "name",
+        "quantity",
+        "unit",
+        "stock_date",
+        "best_before_days",
+        "status",
+        "category",
+      ),
+      expiry_status: this.expiryStatus(today),
+      days_remaining: this.daysRemaining(today),
+    };
+  }
 
   expiresAt(): number | null {
     if (this.record.stock_date == null) return null;

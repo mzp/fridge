@@ -39,9 +39,13 @@ src/
     schema.ts       Drizzle schema
     index.ts        DB connection
   model/            Domain model classes and shared business rules
+  lib/              Generic shared helpers (date, pick)
 tests/
+  model/            Model unit tests
   mcp/              MCP tests
   routes/           Web route tests
+  lib/              Lib helper tests
+  web/              View helper tests
   e2e/              Playwright E2E tests
 public/             Static assets
 docs/               Architecture docs and ADRs

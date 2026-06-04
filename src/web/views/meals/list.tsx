@@ -1,5 +1,6 @@
 import type { FC } from "hono/jsx";
 import type { Meal } from "@/model/meal.js";
+import { riceLabel, soupLabel, warmColdSidesLabel } from "@/web/views/meals/helper.js";
 
 export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }) => (
   <section>
@@ -14,7 +15,9 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
           <tr class="data-table-head">
             <th class="data-table-heading">Date</th>
             <th class="data-table-heading">Main</th>
-            <th class="data-table-heading">Side</th>
+            <th class="data-table-heading">Rice</th>
+            <th class="data-table-heading">Sides</th>
+            <th class="data-table-heading">Soup</th>
           </tr>
         </thead>
         <tbody>
@@ -26,17 +29,27 @@ export const MealsList: FC<{ meals: Meal[]; today: string }> = ({ meals, today }
               <tr key={m.record.id} class={`data-table-row ${past ? "is-past" : ""}`}>
                 <td class="pr-4 text-gray-600">
                   <a href={href} class={linkClass}>
-                    {m.record.date}
+                    {m.record.date} ({m.weekdayLabel()})
                   </a>
                 </td>
                 <td class="pr-4">
                   <a href={href} class={linkClass}>
-                    {m.record.main_dish}
+                    {m.record.main}
+                  </a>
+                </td>
+                <td class="pr-4 text-gray-500">
+                  <a href={href} class={linkClass}>
+                    {riceLabel(m)}
+                  </a>
+                </td>
+                <td class="pr-4 text-gray-500">
+                  <a href={href} class={linkClass}>
+                    {warmColdSidesLabel(m)}
                   </a>
                 </td>
                 <td class="text-gray-500">
                   <a href={href} class={linkClass}>
-                    {m.sideDishLabel()}
+                    {soupLabel(m)}
                   </a>
                 </td>
               </tr>

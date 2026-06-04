@@ -3,6 +3,7 @@ import type { pantry, pantryLogs } from "@/db/schema.js";
 import type { Meal } from "@/model/meal.js";
 import { PantryItem } from "@/model/pantry-item.js";
 import { Layout } from "@/web/views/layout.js";
+import { coldSideLabel, hotSideLabel, riceLabel, soupLabel } from "@/web/views/meals/helper.js";
 
 type PantryUsageEntry = Pick<typeof pantry.$inferSelect, "id" | "name" | "unit"> &
   Pick<typeof pantryLogs.$inferSelect, "delta" | "note">;
@@ -19,12 +20,24 @@ export const MealDetail: FC<{ item: Meal; pantryUsage: PantryUsageEntry[] }> = (
       <h1 class="page-title mt-2">{item.record.date}</h1>
       <dl class="detail-list">
         <div class="detail-row">
-          <dt class="detail-label w-24">Main dish</dt>
-          <dd>{item.record.main_dish}</dd>
+          <dt class="detail-label w-24">Main</dt>
+          <dd>{item.record.main}</dd>
         </div>
         <div class="detail-row">
-          <dt class="detail-label w-24">Side dish</dt>
-          <dd>{item.sideDishLabel("—")}</dd>
+          <dt class="detail-label w-24">Rice</dt>
+          <dd>{riceLabel(item, "—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Hot side</dt>
+          <dd>{hotSideLabel(item, "—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Cold side</dt>
+          <dd>{coldSideLabel(item, "—")}</dd>
+        </div>
+        <div class="detail-row">
+          <dt class="detail-label w-24">Soup</dt>
+          <dd>{soupLabel(item, "—")}</dd>
         </div>
       </dl>
       <div class="flex gap-3">

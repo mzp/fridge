@@ -28,27 +28,66 @@ export const MealForm: FC<{ item?: Meal; action: string; title: string; cancelHr
           />
         </div>
         <div>
-          <label for="main_dish" class="form-label">
-            Main dish
+          <label for="main" class="form-label">
+            Main
           </label>
           <input
             type="text"
-            id="main_dish"
-            name="main_dish"
-            value={item?.main_dish ?? ""}
+            id="main"
+            name="main"
+            value={item?.main ?? ""}
             required
             class="form-control"
           />
         </div>
         <div>
-          <label for="side_dish" class="form-label">
-            Side dish
+          <label for="rice" class="form-label">
+            Rice
           </label>
           <input
             type="text"
-            id="side_dish"
-            name="side_dish"
-            value={item?.side_dish ?? ""}
+            id="rice"
+            name="rice"
+            value={item?.rice ?? ""}
+            placeholder="optional"
+            class="form-control"
+          />
+        </div>
+        <div>
+          <label for="hot_side" class="form-label">
+            Hot side
+          </label>
+          <input
+            type="text"
+            id="hot_side"
+            name="hot_side"
+            value={item?.hot_side ?? ""}
+            placeholder="optional"
+            class="form-control"
+          />
+        </div>
+        <div>
+          <label for="cold_side" class="form-label">
+            Cold side
+          </label>
+          <input
+            type="text"
+            id="cold_side"
+            name="cold_side"
+            value={item?.cold_side ?? ""}
+            placeholder="optional"
+            class="form-control"
+          />
+        </div>
+        <div>
+          <label for="soup" class="form-label">
+            Soup
+          </label>
+          <input
+            type="text"
+            id="soup"
+            name="soup"
+            value={item?.soup ?? ""}
             placeholder="optional"
             class="form-control"
           />

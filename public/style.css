@@ -124,4 +124,16 @@
   .calendar-empty-cell {
     @apply border border-gray-100 h-16 p-1 bg-gray-50;
   }
+
+  .calendar-date {
+    @apply text-xs text-gray-400 mb-1;
+  }
+
+  .calendar-main {
+    @apply text-xs text-emerald-700 hover:underline leading-tight block break-words;
+  }
+
+  .calendar-add {
+    @apply block w-full h-full hover:bg-gray-50;
+  }
 }
