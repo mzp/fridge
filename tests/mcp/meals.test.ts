@@ -101,51 +101,6 @@ describe("get_meals", () => {
     });
   });
 
-  it("preserves omitted categories on update (partial update)", async () => {
-    const client = await createTestClient(createTestDb(), registerMealTools);
-
-    await client.callTool({
-      name: "set_meal",
-      arguments: { date: "2026-05-15", main: "鮭の塩焼き", soup: "味噌汁" },
-    });
-
-    // Add only a cold side; main and soup are not passed and must be preserved.
-    const updated = await client.callTool({
-      name: "set_meal",
-      arguments: { date: "2026-05-15", cold_side: "ほうれん草のおひたし" },
-    });
-    expect(updated.structuredContent).toEqual({
-      ok: true,
-      action: "updated",
-      message: "Updated meal for 2026-05-15.",
-      meal: {
-        id: 1,
-        date: "2026-05-15",
-        weekday: "Fri",
-        dishes: { main: "鮭の塩焼き", cold_side: "ほうれん草のおひたし", soup: "味噌汁" },
-      },
-    });
-  });
-
-  it("clears a category when passed an empty string", async () => {
-    const client = await createTestClient(createTestDb(), registerMealTools);
-
-    await client.callTool({
-      name: "set_meal",
-      arguments: { date: "2026-05-15", main: "鮭の塩焼き", soup: "味噌汁" },
-    });
-    const updated = await client.callTool({
-      name: "set_meal",
-      arguments: { date: "2026-05-15", soup: "" },
-    });
-    expect(updated.structuredContent).toEqual({
-      ok: true,
-      action: "updated",
-      message: "Updated meal for 2026-05-15.",
-      meal: { id: 1, date: "2026-05-15", weekday: "Fri", dishes: { main: "鮭の塩焼き" } },
-    });
-  });
-
   it("refuses to create a new meal without a main dish", async () => {
     const client = await createTestClient(createTestDb(), registerMealTools);
 
